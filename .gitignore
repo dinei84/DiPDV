@@ -1,0 +1,27 @@
+# Java / Maven
+backend/target/
+backend/*.class
+
+# Spring Boot
+backend/src/main/resources/application-dev.yml
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Variáveis de ambiente — nunca commitar
+.env
+.env.*
+!.env.example
