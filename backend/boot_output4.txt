@@ -1,0 +1,92 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< com.dipdv:backend >--------------------------
+[INFO] Building DiPDV Backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.3.7:run (default-cli) > test-compile @ backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ backend ---
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 7 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ backend ---
+[INFO] skip non existing resourceDirectory C:\Users\g10ar\Documents\GitHub\DiPDV\backend\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ backend ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 21] to target\test-classes
+[INFO] 
+[INFO] <<< spring-boot:3.3.7:run (default-cli) < test-compile @ backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.3.7:run (default-cli) @ backend ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.7)
+
+2026-03-19T10:30:53.963-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] com.dipdv.DiPdvApplication               : Starting DiPdvApplication using Java 21.0.9 with PID 20184 (C:\Users\g10ar\Documents\GitHub\DiPDV\backend\target\classes started by g10ar in C:\Users\g10ar\Documents\GitHub\DiPDV\backend)
+2026-03-19T10:30:53.966-03:00 DEBUG 20184 --- [dipdv-backend] [  restartedMain] com.dipdv.DiPdvApplication               : Running with Spring Boot v3.3.7, Spring v6.1.16
+2026-03-19T10:30:53.967-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] com.dipdv.DiPdvApplication               : The following 1 profile is active: "dev"
+2026-03-19T10:30:54.068-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-03-19T10:30:54.069-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-03-19T10:30:55.789-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-19T10:30:55.814-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 16 ms. Found 0 JPA repository interfaces.
+2026-03-19T10:30:56.837-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-03-19T10:30:56.854-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-19T10:30:56.855-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-03-19T10:30:56.919-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-19T10:30:56.920-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2850 ms
+2026-03-19T10:30:57.388-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-19T10:30:57.616-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1da82eb0
+2026-03-19T10:30:57.617-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-19T10:30:57.659-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://127.0.0.1:5432/dipdv_dev (PostgreSQL 16.13)
+2026-03-19T10:30:57.756-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.f.core.internal.command.DbValidate     : Successfully validated 3 migrations (execution time 00:00.051s)
+2026-03-19T10:30:57.783-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 3
+2026-03-19T10:30:57.789-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-03-19T10:30:57.875-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-19T10:30:57.953-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-03-19T10:30:57.996-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-19T10:30:58.718-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-19T10:30:58.859-03:00  WARN 20184 --- [dipdv-backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-19T10:30:59.372-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-19T10:30:59.377-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-19T10:30:59.505-03:00 DEBUG 20184 --- [dipdv-backend] [  restartedMain] com.dipdv.shared.tenant.TenantFilter     : Filter 'tenantFilter' configured for use
+2026-03-19T10:30:59.506-03:00 DEBUG 20184 --- [dipdv-backend] [  restartedMain] c.dipdv.shared.security.JwtAuthFilter    : Filter 'jwtAuthFilter' configured for use
+2026-03-19T10:30:59.817-03:00  WARN 20184 --- [dipdv-backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-19T10:30:59.904-03:00  WARN 20184 --- [dipdv-backend] [  restartedMain] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: afa96a2b-3e45-4816-af0c-cb95397f847b
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-03-19T10:30:59.933-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-03-19T10:31:00.650-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-03-19T10:31:00.807-03:00 DEBUG 20184 --- [dipdv-backend] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, LogoutFilter, JwtAuthFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
+2026-03-19T10:31:01.595-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-03-19T10:31:01.688-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-03-19T10:31:01.701-03:00  INFO 20184 --- [dipdv-backend] [  restartedMain] com.dipdv.DiPdvApplication               : Started DiPdvApplication in 8.423 seconds (process running for 8.959)
+2026-03-19T10:31:17.333-03:00  INFO 20184 --- [dipdv-backend] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-19T10:31:17.334-03:00  INFO 20184 --- [dipdv-backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-19T10:31:17.336-03:00  INFO 20184 --- [dipdv-backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-03-19T10:31:17.384-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /actuator/health
+2026-03-19T10:31:17.411-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-1] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-03-19T10:31:17.420-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured GET /actuator/health
+2026-03-19T10:31:42.480-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /actuator/health
+2026-03-19T10:31:42.482-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-3] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-03-19T10:31:42.483-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /actuator/health
+2026-03-19T10:34:04.301-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /swagger-ui/index.html
+2026-03-19T10:34:04.304-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-03-19T10:34:04.314-03:00 DEBUG 20184 --- [dipdv-backend] [nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /swagger-ui/index.html
