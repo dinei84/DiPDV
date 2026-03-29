@@ -1,15 +1,13 @@
 package com.dipdv.shared.tenant;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -20,21 +18,29 @@ import java.util.UUID;
  *
  * FLUXO:
  *   JwtAuthFilter popula TenantContext  →  TenantFilter lê TenantContext
- *   e executa: SET LOCAL app.current_tenant = '<uuid>'
+ *   e delega para TenantContextService que executa:
+ *   SET LOCAL app.current_tenant = '<uuid>'
  *   →  PostgreSQL RLS policies leem: current_setting('app.current_tenant', true)
+ *
+ * POR QUE DELEGAR PARA UM SERVICE?
+ *   @Transactional em métodos protected de OncePerRequestFilter não funciona com CGLIB.
+ *   O Spring não consegue criar proxy de filtros do Tomcat (contexto marcado como final).
+ *   A lógica transacional foi extraída para TenantContextService — padrão correto.
+ *
+ * ORDEM NA FILTER CHAIN:
+ *   JwtAuthFilter → TenantFilter → Controller → Service (@Transactional)
+ *
+ * ROTAS PÚBLICAS (/auth/**):
+ *   TenantContext.get() retorna null para requests sem JWT.
+ *   O filter só executa o SET LOCAL se o tenantId estiver presente,
+ *   evitando erro em rotas públicas.
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TenantFilter extends OncePerRequestFilter {
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    private final TransactionTemplate transactionTemplate;
-
-    public TenantFilter(TransactionTemplate transactionTemplate) {
-        this.transactionTemplate = transactionTemplate;
-    }
+    private final TenantContextService tenantContextService;
 
     @Override
     protected void doFilterInternal(
@@ -46,39 +52,16 @@ public class TenantFilter extends OncePerRequestFilter {
         UUID tenantId = TenantContext.get();
 
         if (tenantId != null) {
-            try {
-                transactionTemplate.execute(status -> {
-                    // Injeta o tenant_id na transação atual do PostgreSQL
-                    entityManager
-                        .createNativeQuery("SET LOCAL app.current_tenant = :tenantId")
-                        .setParameter("tenantId", tenantId.toString())
-                        .executeUpdate();
-
-                    log.debug("TenantContext ativado para tenant={}", tenantId);
-
-                    try {
-                        filterChain.doFilter(request, response);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    return null;
-                });
-            } catch (RuntimeException e) {
-                if (e.getCause() instanceof ServletException) {
-                    throw (ServletException) e.getCause();
-                }
-                if (e.getCause() instanceof IOException) {
-                    throw (IOException) e.getCause();
-                }
-                throw e;
-            }
-        } else {
-            filterChain.doFilter(request, response);
+            // Delega para o Service que executa o SET LOCAL dentro de uma transação gerenciada
+            tenantContextService.applyTenantContext(tenantId);
         }
+
+        filterChain.doFilter(request, response);
     }
 
     /**
      * Não filtrar requisições de assets estáticos ou atuator
+     * (esses endpoints não precisam de contexto de tenant)
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
