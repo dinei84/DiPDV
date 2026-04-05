@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -57,6 +59,28 @@ public class GlobalExceptionHandler {
                 ex.getStatus().name(),
                 ex.getMessage()
             ));
+    }
+
+    /**
+     * Erros de leitura HTTP — JSON malformado, etc.
+     * Retorna 400 em vez de 500.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        log.warn("Erro de leitura HTTP: {}", ex.getMessage());
+        return ResponseEntity
+            .badRequest()
+            .body(ApiError.of(400, "BAD_REQUEST", "JSON malformado ou corpo da requisição inválido."));
+    }
+
+    /**
+     * Erros de autenticação do Spring Security (ex: BadCredentialsException).
+     */
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiError.of(401, "UNAUTHORIZED", "Email ou senha inválidos."));
     }
 
     /**

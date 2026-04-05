@@ -36,8 +36,7 @@ public class TenantContextService {
     @Transactional
     public void applyTenantContext(UUID tenantId) {
         entityManager
-            .createNativeQuery("SET LOCAL app.current_tenant = :tenantId")
-            .setParameter("tenantId", tenantId.toString())
+            .createNativeQuery("SET LOCAL app.current_tenant = '" + tenantId + "'")
             .executeUpdate();
 
         log.debug("TenantContext ativado para tenant={}", tenantId);
