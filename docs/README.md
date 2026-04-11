@@ -1,168 +1,79 @@
-# DiPDV
+# DiPDV — Documentação
 
-> Sistema de Ponto de Venda (PDV) para lanchonetes — SaaS multi-tenant, mobile-first.
-
-[![Java](https://img.shields.io/badge/Java-21-orange)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green)](https://spring.io/projects/spring-boot)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org/)
-[![Railway](https://img.shields.io/badge/Deploy-Railway-purple)](https://railway.app/)
+Hub de documentação do projeto DiPDV. Use este índice para encontrar rapidamente arquitetura, requisitos, backlog, sprints e materiais de apoio.
 
 ---
 
-## O que é o DiPDV
-
-O DiPDV é um sistema de PDV moderno voltado para lanchonetes de pequeno e médio porte. Permite gerenciar vendas, caixa, estoque e relatórios via browser ou dispositivo móvel (PWA), sem necessidade de instalação.
-
-O produto opera como **SaaS multi-tenant**: múltiplos estabelecimentos usam a mesma plataforma com isolamento total de dados via Row Level Security (RLS) no PostgreSQL.
-
----
-
-## Módulos do MVP
-
-| Módulo | Status |
-|---|---|
-| PDV / Vendas | 🔲 Em desenvolvimento |
-| Pagamentos / Caixa | 🔲 Em desenvolvimento |
-| Produtos / Cardápio | 🔲 Em desenvolvimento |
-| Estoque Básico | 🔲 Em desenvolvimento |
-| Relatórios | 🔲 Em desenvolvimento |
-| Autenticação / Multi-tenancy | 🔲 Em desenvolvimento |
-| Auditoria | 🔲 Em desenvolvimento |
-
----
-
-## Stack
-
-| Camada | Tecnologia |
-|---|---|
-| Backend | Java 21 + Spring Boot 3 |
-| Frontend | Next.js 14 + Tailwind CSS (PWA) |
-| Banco de Dados | PostgreSQL 16 |
-| Migrations | Flyway |
-| Autenticação | JWT + Refresh Token |
-| Hospedagem | Railway |
-| CI/CD | GitHub Actions |
-| Gestão Ágil | GitHub Projects (Scrum) |
-
----
-
-## Estrutura do Monorepo
+## Mapa de Pastas
 
 ```
-dipdv/
-├── backend/                        # Spring Boot — API REST
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/dipdv/
-│   │   │   │   ├── modules/        # Módulos de negócio
-│   │   │   │   │   ├── auth/
-│   │   │   │   │   ├── catalog/
-│   │   │   │   │   ├── order/
-│   │   │   │   │   ├── payment/
-│   │   │   │   │   ├── cashregister/
-│   │   │   │   │   ├── inventory/
-│   │   │   │   │   └── report/
-│   │   │   │   ├── shared/         # Infra compartilhada
-│   │   │   │   │   ├── audit/
-│   │   │   │   │   ├── security/
-│   │   │   │   │   └── tenant/
-│   │   │   │   └── DiPdvApplication.java
-│   │   │   └── resources/
-│   │   │       ├── db/migration/   # Flyway migrations
-│   │   │       │   ├── V1__initial_schema.sql
-│   │   │       │   ├── V2__rls_policies.sql
-│   │   │       │   └── V3__indexes.sql
-│   │   │       ├── application.yml
-│   │   │       ├── application-dev.yml
-│   │   │       └── application-prod.yml
-│   │   └── test/
-│   └── pom.xml
-├── frontend/                       # Next.js 14 — PWA mobile-first
-│   ├── src/
-│   ├── public/
-│   └── package.json
-├── docs/                           # Documentação do projeto
-│   ├── README.md                   ← este arquivo
-│   ├── ARCHITECTURE.md
-│   ├── DATABASE.md
-│   ├── CONTRIBUTING.md
-│   └── SETUP.md
-├── .github/
-│   ├── workflows/
-│   │   ├── ci-backend.yml
-│   │   └── ci-frontend.yml
-│   └── PULL_REQUEST_TEMPLATE.md
-└── .gitignore
+docs/
+├── architecture/           Decisões arquiteturais e modelo de banco de dados
+├── backlog/                Product Backlog MVP (PDF, DOCX, Markdown)
+├── requirements/           Documento de requisitos (PDF, DOCX)
+├── setup/                  Guia de setup e guia de contribuição
+├── prompts/                Prompts usados nas sessões de desenvolvimento com IA
+│   ├── general/            Prompts de alinhamento e configuração geral
+│   ├── sprint0/            Prompts do Sprint 0 (Auth, setup inicial)
+│   └── sprint1/            Prompts do Sprint 1 (Catalog, Modifiers)
+├── sprints/                Relatórios, logs de execução e fechamentos por sprint
+│   ├── sprint0/            Sprint 0 — Autenticação JWT
+│   ├── sprint1/            Sprint 1 — Catalog, Modifiers, Order, Audit
+│   └── sprint2/            Sprint 2 — CashRegister, Payment, NFC-e
+├── claude.md               Contexto para LLM (lido automaticamente pelo Claude Code)
+└── README.md               Este arquivo
 ```
 
 ---
 
-## Como rodar localmente
+## Índice de Conteúdo
 
-### Pré-requisitos
+### Arquitetura
+- [`architecture/architecture.md`](architecture/architecture.md) — Decisões arquiteturais do sistema
+- [`architecture/database.md`](architecture/database.md) — Modelo de banco de dados e migrações
 
-- Java 21+
-- Maven 3.9+
-- Node.js 20+
-- Docker (para o PostgreSQL local)
-- Git
+### Backlog e Requisitos
+- [`backlog/product_backlog_mvp_v1.0.pdf`](backlog/product_backlog_mvp_v1.0.pdf) — Product Backlog MVP v1.0
+- [`backlog/product_backlog.litcoffee`](backlog/product_backlog.litcoffee) — Backlog em formato texto
+- [`requirements/requisitos.pdf`](requirements/requisitos.pdf) — Documento de requisitos
 
-### Backend
+### Setup
+- [`setup/setup.md`](setup/setup.md) — Como rodar o projeto localmente
+- [`setup/contributing.md`](setup/contributing.md) — Guia de contribuição
 
-```bash
-# 1. Subir o PostgreSQL via Docker
-docker run --name dipdv-postgres \
-  -e POSTGRES_DB=dipdv \
-  -e POSTGRES_USER=dipdv_app \
-  -e POSTGRES_PASSWORD=dipdv_local \
-  -p 5432:5432 -d postgres:16
+### Sprints
 
-# 2. Configurar variáveis de ambiente (copiar o exemplo)
-cp backend/src/main/resources/application-dev.yml.example \
-   backend/src/main/resources/application-dev.yml
+#### Sprint 0 — Autenticação JWT
+- [`sprints/sprint0/sprint0_conclusao.md`](sprints/sprint0/sprint0_conclusao.md) — Relatório de fechamento
+- [`sprints/sprint0/sprint0_running.md`](sprints/sprint0/sprint0_running.md) — Como rodar e testar
+- [`sprints/sprint0/errors_corrected_for_sprint0.md`](sprints/sprint0/errors_corrected_for_sprint0.md) — Bugs corrigidos
 
-# 3. Rodar a aplicação (Flyway executa as migrations automaticamente)
-cd backend
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-```
+#### Sprint 1 — Catalog, Modifiers, Order, Audit
+- [`sprints/sprint1/sprint1_running.md`](sprints/sprint1/sprint1_running.md) — Como rodar e testar
+- [`sprints/sprint1/sprint1_conclusao.md`](sprints/sprint1/sprint1_conclusao.md) — Relatório de fechamento
+- [`sprints/sprint1/sprint1_final.md`](sprints/sprint1/sprint1_final.md) — Relatório final do Catalog
+- [`sprints/sprint1/PROMPT_SPRINT1_ORDER_FINAL.md`](sprints/sprint1/PROMPT_SPRINT1_ORDER_FINAL.md) — Relatório final do Order + AuditAspect
+- [`sprints/sprint1/SPRINT1_VALIDACAO_US033_FINAL.md`](sprints/sprint1/SPRINT1_VALIDACAO_US033_FINAL.md) — Validação final US03.3
 
-A API estará disponível em `http://localhost:8080`.
-Swagger UI em `http://localhost:8080/swagger-ui.html`.
+#### Sprint 2 — CashRegister, Payment, NFC-e
+- [`sprints/sprint2/PROMPT_SPRINT2_CASHREGISTER_PAYMENT_NFCE.md`](sprints/sprint2/PROMPT_SPRINT2_CASHREGISTER_PAYMENT_NFCE.md) — Spec completa da sprint
+- [`sprints/sprint2/PROMPT_SPRINT2_CASHREGISTER_PAYMENT_NFCE_running.md`](sprints/sprint2/PROMPT_SPRINT2_CASHREGISTER_PAYMENT_NFCE_running.md) — Relatório de execução
 
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-O frontend estará disponível em `http://localhost:3000`.
-
----
-
-## Documentação
-
-| Documento | Conteúdo |
-|---|---|
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Decisões de arquitetura, padrões e módulos |
-| [DATABASE.md](./DATABASE.md) | Modelagem do banco, ENUMs, decisões de design |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Git Flow, padrão de commits, processo de PR |
-| [SETUP.md](./SETUP.md) | Guia completo de configuração do ambiente |
+### Prompts de Desenvolvimento
+- [`prompts/general/PROMPT_ALINHAMENTO_PROCESSO.md`](prompts/general/PROMPT_ALINHAMENTO_PROCESSO.md) — Alinhamento de processo
+- [`prompts/general/prompt_antigravity_correcoes.md`](prompts/general/prompt_antigravity_correcoes.md) — Correções Docker + boot
+- [`prompts/sprint0/prompt_antigravity_setup.md`](prompts/sprint0/prompt_antigravity_setup.md) — Setup inicial do projeto
+- [`prompts/sprint0/prompt_sprint0_auth.md`](prompts/sprint0/prompt_sprint0_auth.md) — AuthController Sprint 0
+- [`prompts/sprint0/prompt_sprint0_validacao_final.md`](prompts/sprint0/prompt_sprint0_validacao_final.md) — Validação final Sprint 0
+- [`prompts/sprint1/prompt_sprint1_modifiers.md`](prompts/sprint1/prompt_sprint1_modifiers.md) — Modifiers Sprint 1
+- [`prompts/sprint1/prompt_sprint1_validacao_modifiers.md`](prompts/sprint1/prompt_sprint1_validacao_modifiers.md) — Validação Modifiers
 
 ---
 
-## Equipe
+## Convenções
 
-| Papel | Responsável |
-|---|---|
-| Desenvolvedor Principal | Dev |
-| Tech Lead / Arquitetura | Claude (Anthropic) |
-| Pair Programming | Antigravity |
-
----
-
-## Licença
-
-Projeto acadêmico e de desenvolvimento interno. Todos os direitos reservados.
+- Nomes de arquivos em `snake_case` (exceto siglas e relatórios em `UPPER_SNAKE_CASE`).
+- Novos documentos vão na pasta temática correta — nunca soltos em `docs/`.
+- Sprints sempre em `docs/sprints/sprintN/`.
+- Prompts de desenvolvimento sempre em `docs/prompts/sprintN/` ou `docs/prompts/general/`.
+- Relatórios de fechamento com sufixo `_conclusao.md` ou `_FINAL.md`.
