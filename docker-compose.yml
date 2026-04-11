@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: dipdv_app
       POSTGRES_PASSWORD: dipdv_local_2025
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - dipdv_postgres_data:/var/lib/postgresql/data
     healthcheck:

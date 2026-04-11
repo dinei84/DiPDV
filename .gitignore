@@ -25,3 +25,25 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Arquivos temporários de desenvolvimento (raiz do projeto)
+/auth.txt
+/login.json
+/wrong_login.json
+/path.txt
+/tenant_files.txt
+/token.txt
+/token*.txt
+/push_output.txt
+/smoke_output.txt
+/smoke_final.txt
+/sql_log.txt
+/runtime_tail.txt
+/log_tail.txt
+/gitlog*.txt
+/get_token.ps1
+/test_login*.ps1
+/smoke_tests_*.ps1
+
+# Logs do backend
+backend/*.log

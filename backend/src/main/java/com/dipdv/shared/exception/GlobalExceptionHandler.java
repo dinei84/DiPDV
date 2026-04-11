@@ -3,7 +3,7 @@ package com.dipdv.shared.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,8 +17,8 @@ import java.util.List;
  *
  * HIERARQUIA DE HANDLERS (ordem de precedência):
  * 1. MethodArgumentNotValidException → 400 com lista de campos inválidos
- * 2. BusinessException               → status definido pelo Service (401, 404, 409...)
- * 3. Exception (fallback)            → 500 sem expor detalhes internos
+ * 2. BusinessException → status definido pelo Service (401, 404, 409...)
+ * 3. Exception (fallback) → 500 sem expor detalhes internos
  *
  * IMPORTANTE: Nunca expor stack trace ou mensagens internas em produção.
  * O log registra o detalhe técnico; o response retorna apenas o necessário.
@@ -34,14 +34,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         List<ApiError.FieldError> fields = ex.getBindingResult()
-            .getFieldErrors()
-            .stream()
-            .map(e -> new ApiError.FieldError(e.getField(), e.getDefaultMessage()))
-            .toList();
+                .getFieldErrors()
+                .stream()
+                .map(e -> new ApiError.FieldError(e.getField(), e.getDefaultMessage()))
+                .toList();
 
         return ResponseEntity
-            .badRequest()
-            .body(ApiError.ofValidation(fields));
+                .badRequest()
+                .body(ApiError.ofValidation(fields));
     }
 
     /**
@@ -53,12 +53,11 @@ public class GlobalExceptionHandler {
         log.warn("BusinessException: {} — status {}", ex.getMessage(), ex.getStatus());
 
         return ResponseEntity
-            .status(ex.getStatus())
-            .body(ApiError.of(
-                ex.getStatus().value(),
-                ex.getStatus().name(),
-                ex.getMessage()
-            ));
+                .status(ex.getStatus())
+                .body(ApiError.of(
+                        ex.getStatus().value(),
+                        ex.getStatus().name(),
+                        ex.getMessage()));
     }
 
     /**
@@ -69,8 +68,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleMessageNotReadable(HttpMessageNotReadableException ex) {
         log.warn("Erro de leitura HTTP: {}", ex.getMessage());
         return ResponseEntity
-            .badRequest()
-            .body(ApiError.of(400, "BAD_REQUEST", "JSON malformado ou corpo da requisição inválido."));
+                .badRequest()
+                .body(ApiError.of(400, "BAD_REQUEST", "JSON malformado ou corpo da requisição inválido."));
     }
 
     /**
@@ -79,8 +78,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity
-            .status(HttpStatus.UNAUTHORIZED)
-            .body(ApiError.of(401, "UNAUTHORIZED", "Email ou senha inválidos."));
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiError.of(401, "UNAUTHORIZED", "Email ou senha inválidos."));
+    }
+
+    /**
+     * Conflito de Optimistic Locking — pedido editado simultaneamente por outro operador.
+     * Retorna 409 CONFLICT com mensagem clara para o operador recarregar e tentar novamente.
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        log.warn("Optimistic locking conflict: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiError.of(409, "CONFLICT",
+                        "Pedido foi modificado por outro operador. Recarregue e tente novamente."));
     }
 
     /**
@@ -92,8 +104,8 @@ public class GlobalExceptionHandler {
         log.error("Erro interno não tratado", ex);
 
         return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ApiError.of(500, "INTERNAL_SERVER_ERROR",
-                "Erro interno. Tente novamente em instantes."));
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiError.of(500, "INTERNAL_SERVER_ERROR",
+                        "Erro interno. Tente novamente em instantes."));
     }
 }

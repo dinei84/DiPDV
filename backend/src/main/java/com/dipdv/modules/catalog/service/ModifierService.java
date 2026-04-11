@@ -142,7 +142,7 @@ public class ModifierService {
 
     @Transactional
     public ModifierOptionResponse updateOption(UUID groupId, UUID optionId, ModifierOptionRequest request) {
-        ModifierGroup group = getGroupEntity(groupId);
+        getGroupEntity(groupId);
 
         ModifierOption option = optionRepository.findByIdWithGroup(optionId)
                 .orElseThrow(() -> new BusinessException("Opção não encontrada", HttpStatus.NOT_FOUND));
