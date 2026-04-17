@@ -83,6 +83,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Erros de autorização do Spring Security (Acesso Negado).
+     */
+    @ExceptionHandler({
+            org.springframework.security.access.AccessDeniedException.class,
+            org.springframework.security.authorization.AuthorizationDeniedException.class
+    })
+    public ResponseEntity<ApiError> handleAccessDenied(Exception ex) {
+        log.warn("Acesso negado: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiError.of(403, "FORBIDDEN", "Acesso negado. Você não tem permissão para esta operação."));
+    }
+
+    /**
      * Conflito de Optimistic Locking — pedido editado simultaneamente por outro operador.
      * Retorna 409 CONFLICT com mensagem clara para o operador recarregar e tentar novamente.
      */
