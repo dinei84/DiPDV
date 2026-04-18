@@ -20,6 +20,7 @@ import com.dipdv.shared.audit.Auditable;
 import com.dipdv.shared.exception.BusinessException;
 import com.dipdv.shared.security.DiPdvAuthDetails;
 import com.dipdv.shared.tenant.TenantContext;
+import com.dipdv.shared.tenant.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,6 +46,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final ModifierGroupRepository modifierGroupRepository;
     private final StockMovementRepository stockMovementRepository;
+    private final TenantRepository tenantRepository;
 
     // ── Pedido ─────────────────────────────────────────────────────────────────
 
@@ -248,6 +250,12 @@ public class OrderService {
         order.setStatus(OrderStatus.CLOSED);
         order.setClosedAt(OffsetDateTime.now());
         orderRepository.save(order);
+
+        // Atualizar last_activity_at do tenant
+        tenantRepository.updateLastActivity(
+            tenantId,
+            OffsetDateTime.now()
+        );
 
         log.info("Pedido {} fechado", orderId);
 

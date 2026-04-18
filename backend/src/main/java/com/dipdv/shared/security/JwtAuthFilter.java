@@ -91,8 +91,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             UUID tenantId = jwtService.extractTenantId(claims);
             String role   = jwtService.extractRole(claims);
 
-            // 1. Popular TenantContext — lido pelo TenantFilter para SET LOCAL
-            TenantContext.set(tenantId);
+            // Se SUPER_ADMIN, setar flag no TenantContext para uso posterior
+            if ("SUPER_ADMIN".equals(role)) {
+                TenantContext.set(MasterTenantConstants.MASTER_TENANT_ID);
+                // Nota: applyTenantContextSuperAdmin() é chamado pelos controllers admin
+                // não aqui no Filter — o Filter apenas marca o contexto Java
+            } else {
+                // 1. Popular TenantContext — lido pelo TenantFilter para SET LOCAL
+                TenantContext.set(tenantId);
+            }
 
             // 2. Popular SecurityContext — lido pelo Spring Security e @PreAuthorize
             // O prefixo ROLE_ é exigido pelo Spring Security para hasRole()

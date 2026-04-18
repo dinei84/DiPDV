@@ -46,6 +46,10 @@ public class AuditLog {
     @Column(name = "ip_address", columnDefinition = "inet", insertable = false, updatable = false)
     private String ipAddress;
 
+    @Column(name = "is_admin_action", nullable = false)
+    @Builder.Default
+    private boolean isAdminAction = false;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

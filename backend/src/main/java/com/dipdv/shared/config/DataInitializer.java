@@ -3,6 +3,7 @@ package com.dipdv.shared.config;
 import com.dipdv.modules.auth.entity.User;
 import com.dipdv.modules.auth.entity.enums.UserRole;
 import com.dipdv.modules.auth.repository.UserRepository;
+import com.dipdv.shared.security.MasterTenantConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -37,9 +38,36 @@ public class DataInitializer implements CommandLineRunner {
     private static final UUID DEV_TENANT_ID =
         UUID.fromString("00000000-0000-0000-0000-000000000001");
 
+    private static final UUID MASTER_TENANT_ID = MasterTenantConstants.MASTER_TENANT_ID;
+    private static final String SUPER_ADMIN_EMAIL = "superadmin@dipdv.app";
+
     @Override
     @Transactional
     public void run(String... args) {
+        // Criar SUPER_ADMIN (apenas se não existir)
+        if (!userRepository.existsByEmailAndTenantIdAndDeletedAtIsNull(
+                SUPER_ADMIN_EMAIL, MASTER_TENANT_ID)) {
+
+            User superAdmin = User.builder()
+                .tenantId(MASTER_TENANT_ID)
+                .email(SUPER_ADMIN_EMAIL)
+                .passwordHash(passwordEncoder.encode("SuperAdmin@2025!"))
+                .name("Super Admin DiPDV")
+                .role(UserRole.SUPER_ADMIN)
+                .active(true)
+                .build();
+
+            userRepository.save(superAdmin);
+
+            log.info("╔══════════════════════════════════════════╗");
+            log.info("║         SUPER ADMIN CRIADO               ║");
+            log.info("╠══════════════════════════════════════════╣");
+            log.info("║  email  : superadmin@dipdv.app           ║");
+            log.info("║  senha  : SuperAdmin@2025!               ║");
+            log.info("║  role   : SUPER_ADMIN                    ║");
+            log.info("╚══════════════════════════════════════════╝");
+        }
+
         if (userRepository.existsByEmailAndTenantIdAndDeletedAtIsNull(
                 "admin@dipdv.dev", DEV_TENANT_ID)) {
             log.info("[DEV] Usuário de teste já existe — pulando seed");

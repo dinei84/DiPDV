@@ -1,6 +1,7 @@
 package com.dipdv.shared.audit;
 
 import com.dipdv.shared.security.DiPdvAuthDetails;
+import com.dipdv.shared.security.MasterTenantConstants;
 import com.dipdv.shared.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,8 @@ public class AuditAspect {
             UUID userId = extractUserId();
             UUID entityId = extractEntityId(joinPoint);
 
+            boolean isAdminAction = MasterTenantConstants.isMasterTenant(tenantId);
+
             AuditLog auditLog = AuditLog.builder()
                     .tenantId(tenantId)
                     .userId(userId)
@@ -51,6 +54,7 @@ public class AuditAspect {
                             "method", joinPoint.getSignature().getName(),
                             "args", summarizeArgs(joinPoint.getArgs())
                     ))
+                    .isAdminAction(isAdminAction)
                     .build();
 
             auditLogRepository.save(auditLog);
