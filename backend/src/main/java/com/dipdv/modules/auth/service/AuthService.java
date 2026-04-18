@@ -6,6 +6,8 @@ import com.dipdv.modules.auth.entity.User;
 import com.dipdv.modules.auth.repository.UserRepository;
 import com.dipdv.shared.exception.BusinessException;
 import com.dipdv.shared.security.JwtService;
+import com.dipdv.shared.tenant.enums.TenantPlan;
+import com.dipdv.shared.tenant.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final TenantRepository tenantRepository;
 
     @Value("${dipdv.jwt.expiration-ms}")
     private long jwtExpirationMs;
@@ -46,6 +49,20 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // Mensagem genérica intencional — não revelar se é email ou senha
         final String INVALID_CREDENTIALS = "Email ou senha inválidos";
+
+        // Verificar status do tenant antes de validar credenciais
+        tenantRepository.findById(request.tenantId()).ifPresent(tenant -> {
+            if (tenant.getPlanType() == TenantPlan.SUSPENDED) {
+                throw new BusinessException(
+                        "Conta suspensa. Entre em contato com o suporte DiPDV.",
+                        HttpStatus.FORBIDDEN);
+            }
+            if (!tenant.isActive()) {
+                throw new BusinessException(
+                        "Conta inativa. Entre em contato com o suporte DiPDV.",
+                        HttpStatus.FORBIDDEN);
+            }
+        });
 
         User user = userRepository
             .findActiveByEmailAndTenantId(request.email(), request.tenantId())
