@@ -39,6 +39,7 @@ docs/
 
 ### Setup
 - [`setup/setup.md`](setup/setup.md) — Como rodar o projeto localmente
+- [`setup/run_fullstack_local.md`](setup/run_fullstack_local.md) — Passo a passo para subir backend + frontend
 - [`setup/contributing.md`](setup/contributing.md) — Guia de contribuição
 
 ### Sprints
@@ -58,6 +59,10 @@ docs/
 #### Sprint 2 — CashRegister, Payment, NFC-e
 - [`sprints/sprint2/PROMPT_SPRINT2_CASHREGISTER_PAYMENT_NFCE.md`](sprints/sprint2/PROMPT_SPRINT2_CASHREGISTER_PAYMENT_NFCE.md) — Spec completa da sprint
 - [`sprints/sprint2/PROMPT_SPRINT2_CASHREGISTER_PAYMENT_NFCE_running.md`](sprints/sprint2/PROMPT_SPRINT2_CASHREGISTER_PAYMENT_NFCE_running.md) — Relatório de execução
+
+#### Sprint 3 — Relatórios, Dashboard e PDF
+- [`sprints/sprint3/PROMPT_SPRINT3_REPORTS.md`](sprints/sprint3/PROMPT_SPRINT3_REPORTS.md) — Spec completa da sprint
+- [`sprints/sprint3/sprint3_running.md`](sprints/sprint3/sprint3_running.md) — Relatório de execução e status atual
 
 ### Prompts de Desenvolvimento
 - [`prompts/general/PROMPT_ALINHAMENTO_PROCESSO.md`](prompts/general/PROMPT_ALINHAMENTO_PROCESSO.md) — Alinhamento de processo
