@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import ReportFilters from '@/components/reports/ReportFilters';
 import TopProductsTable from '@/components/reports/TopProductsTable';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, apiFetchBlob } from '@/lib/api';
 
 interface TopProduct {
   productName: string;
@@ -11,46 +12,54 @@ interface TopProduct {
 }
 
 export default function ReportsPage() {
-  const today = new Date().toISOString().split('T')[0];
-  const [from, setFrom] = useState(today);
-  const [to, setTo] = useState(today);
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+
+    setFrom(today);
+    setTo(today);
+  }, []);
+
   async function loadReports() {
+    if (!from || !to) return;
+
     setLoading(true);
     try {
       const products = await apiFetch<TopProduct[]>(
         `/api/v1/reports/top-products?from=${from}&to=${to}&limit=10`
       );
       setTopProducts(products);
+    } catch (error) {
+      console.error(error);
+      setTopProducts([]);
     } finally {
       setLoading(false);
     }
   }
 
-  function downloadPdf() {
-    const token =
-      typeof window !== 'undefined'
-        ? localStorage.getItem('dipdv_token')
-        : null;
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/reports/summary/pdf?from=${from}&to=${to}`;
+  async function downloadPdf() {
+    if (!from || !to) return;
 
-    fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.blob())
-      .then((blob) => {
-        const objectUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = objectUrl;
-        link.setAttribute('download', 'relatorio-vendas.pdf');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(objectUrl);
-      })
-      .catch(console.error);
+    try {
+      const blob = await apiFetchBlob(
+        `/api/v1/reports/summary/pdf?from=${from}&to=${to}`
+      );
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = objectUrl;
+      link.setAttribute('download', 'relatorio-vendas.pdf');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   return (

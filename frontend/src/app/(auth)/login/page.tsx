@@ -1,18 +1,22 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { saveAuth, type AuthData } from '@/lib/auth';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const [form, setForm] = useState({ tenantId: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const sessionMessage = searchParams.get('session');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
+
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
@@ -22,7 +26,9 @@ export default function LoginPage() {
           body: JSON.stringify(form),
         }
       );
+
       if (!res.ok) throw new Error('Credenciais inválidas');
+
       const data = (await res.json()) as AuthData;
       saveAuth(data);
       router.push('/');
@@ -37,6 +43,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold text-blue-900 mb-6">DiPDV</h1>
+        {sessionMessage && (
+          <div className="bg-amber-50 text-amber-700 p-3 rounded mb-4 text-sm">
+            {sessionMessage}
+          </div>
+        )}
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm">
             {error}
@@ -90,5 +101,24 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-bold text-blue-900 mb-2">DiPDV</h1>
+        <p className="text-sm text-gray-500">Carregando...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
