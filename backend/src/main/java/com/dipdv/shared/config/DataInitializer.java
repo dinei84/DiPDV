@@ -45,19 +45,19 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         // Criar SUPER_ADMIN (apenas se não existir)
+        // Usamos JdbcTemplate para bypassar o @PrePersist guard que exige SecurityContext
         if (!userRepository.existsByEmailAndTenantIdAndDeletedAtIsNull(
                 SUPER_ADMIN_EMAIL, MASTER_TENANT_ID)) {
 
-            User superAdmin = User.builder()
-                .tenantId(MASTER_TENANT_ID)
-                .email(SUPER_ADMIN_EMAIL)
-                .passwordHash(passwordEncoder.encode("SuperAdmin@2025!"))
-                .name("Super Admin DiPDV")
-                .role(UserRole.SUPER_ADMIN)
-                .active(true)
-                .build();
-
-            userRepository.save(superAdmin);
+            jdbcTemplate.update(
+                "INSERT INTO users (id, tenant_id, email, password_hash, name, role, active) " +
+                "VALUES (gen_random_uuid(), ?::uuid, ?, ?, ?, ?::user_role, true)",
+                MASTER_TENANT_ID.toString(),
+                SUPER_ADMIN_EMAIL,
+                passwordEncoder.encode("SuperAdmin@2025!"),
+                "Super Admin DiPDV",
+                UserRole.SUPER_ADMIN.name()
+            );
 
             log.info("╔══════════════════════════════════════════╗");
             log.info("║         SUPER ADMIN CRIADO               ║");
