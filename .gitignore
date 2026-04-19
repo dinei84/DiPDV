@@ -10,6 +10,9 @@ frontend/node_modules/
 frontend/.next/
 frontend/out/
 frontend/.env.local
+admin/node_modules/
+admin/.next/
+admin/out/
 
 # IDEs
 .idea/
@@ -47,3 +50,14 @@ Thumbs.db
 
 # Logs do backend
 backend/*.log
+
+# Claude IDE
+.claude/
+
+# Arquivos gerados localmente
+relatorio-sprint3.pdf
+backend/test-result.txt
+*.pdf
+
+# Logs locais
+*.log

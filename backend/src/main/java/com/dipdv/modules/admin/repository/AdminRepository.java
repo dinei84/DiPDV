@@ -8,6 +8,10 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,10 +52,8 @@ public class AdminRepository {
                             r[3] != null ? r[3].toString() : null,
                             r[4].toString(),
                             (Boolean) r[5],
-                            r[6] != null ? ((java.sql.Timestamp) r[6]).toInstant()
-                                    .atOffset(java.time.ZoneOffset.UTC) : null,
-                            ((java.sql.Timestamp) r[7]).toInstant()
-                                    .atOffset(java.time.ZoneOffset.UTC),
+                            toOffsetDateTime(r[6]),
+                            toOffsetDateTime(r[7]),
                             ((Number) r[8]).longValue()
                     );
                 })
@@ -157,13 +159,32 @@ public class AdminRepository {
                             UUID.fromString(r[0].toString()),
                             r[1].toString(),
                             r[2].toString(),
-                            r[3] != null ? ((java.sql.Timestamp) r[3]).toInstant()
-                                    .atOffset(java.time.ZoneOffset.UTC) : null,
+                            toOffsetDateTime(r[3]),
                             ((Number) r[4]).longValue(),
                             ((Number) r[5]).doubleValue(),
                             r[6].toString()
                     );
                 })
                 .toList();
+    }
+
+    private OffsetDateTime toOffsetDateTime(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof OffsetDateTime offsetDateTime) {
+            return offsetDateTime;
+        }
+
+        if (value instanceof Instant instant) {
+            return instant.atOffset(ZoneOffset.UTC);
+        }
+
+        if (value instanceof Timestamp timestamp) {
+            return timestamp.toInstant().atOffset(ZoneOffset.UTC);
+        }
+
+        throw new IllegalArgumentException("Tipo de data/hora nÃ£o suportado: " + value.getClass());
     }
 }

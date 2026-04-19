@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ import java.util.UUID;
  * Filter que executa UMA VEZ por request (OncePerRequestFilter).
  *
  * RESPONSABILIDADES:
- * 1. Extrair o Bearer Token do header Authorization
+ * 1. Extrair o token via Authorization header ou cookie admin
  * 2. Validar assinatura e expiração via JwtService
  * 3. Popular o SecurityContext com o usuário autenticado
  * 4. Popular o TenantContext com o tenantId extraído do JWT
@@ -77,10 +78,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            return authHeader.substring(BEARER_PREFIX.length());
+        }
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
             return null;
         }
-        return authHeader.substring(BEARER_PREFIX.length());
+
+        for (Cookie cookie : cookies) {
+            if ("dipdv_admin_token".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
     }
 
     private void authenticateRequest(String token) {

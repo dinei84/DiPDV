@@ -3,40 +3,35 @@ package com.dipdv.shared.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 
 /**
- * Handler global de exceções — garante respostas JSON padronizadas.
+ * Handler global de excecoes - garante respostas JSON padronizadas.
  *
- * HIERARQUIA DE HANDLERS (ordem de precedência):
- * 1. MethodArgumentNotValidException → 400 com lista de campos inválidos
- * 2. BusinessException → status definido pelo Service (401, 404, 409...)
- * 3. Exception (fallback) → 500 sem expor detalhes internos
- *
- * IMPORTANTE: Nunca expor stack trace ou mensagens internas em produção.
- * O log registra o detalhe técnico; o response retorna apenas o necessário.
+ * HIERARQUIA DE HANDLERS:
+ * 1. MethodArgumentNotValidException -> 400 com lista de campos invalidos
+ * 2. BusinessException -> status definido pelo service
+ * 3. AccessDeniedException -> 403 para negacao de autorizacao
+ * 4. Exception -> 500 sem expor detalhes internos
  */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Erros de validação do @Valid — campos obrigatórios, formatos inválidos, etc.
-     * Retorna lista de todos os campos com problema de uma vez.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         List<ApiError.FieldError> fields = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(e -> new ApiError.FieldError(e.getField(), e.getDefaultMessage()))
+                .map(error -> new ApiError.FieldError(error.getField(), error.getDefaultMessage()))
                 .toList();
 
         return ResponseEntity
@@ -44,13 +39,9 @@ public class GlobalExceptionHandler {
                 .body(ApiError.ofValidation(fields));
     }
 
-    /**
-     * Erros de negócio lançados pelos Services.
-     * O status HTTP é definido pelo próprio Service via BusinessException.
-     */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiError> handleBusiness(BusinessException ex) {
-        log.warn("BusinessException: {} — status {}", ex.getMessage(), ex.getStatus());
+        log.warn("BusinessException: {} - status {}", ex.getMessage(), ex.getStatus());
 
         return ResponseEntity
                 .status(ex.getStatus())
@@ -60,52 +51,45 @@ public class GlobalExceptionHandler {
                         ex.getMessage()));
     }
 
-    /**
-     * Erros de leitura HTTP — JSON malformado, etc.
-     * Retorna 400 em vez de 500.
-     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleMessageNotReadable(HttpMessageNotReadableException ex) {
         log.warn("Erro de leitura HTTP: {}", ex.getMessage());
         return ResponseEntity
                 .badRequest()
-                .body(ApiError.of(400, "BAD_REQUEST", "JSON malformado ou corpo da requisição inválido."));
+                .body(ApiError.of(400, "BAD_REQUEST", "JSON malformado ou corpo da requisicao invalido."));
     }
 
-    /**
-     * Erros de autenticação do Spring Security (ex: BadCredentialsException).
-     */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiError.of(401, "UNAUTHORIZED", "Email ou senha inválidos."));
+                .body(ApiError.of(401, "UNAUTHORIZED", "Email ou senha invalidos."));
     }
 
-    /**
-     * Conflito de Optimistic Locking — pedido editado simultaneamente por outro operador.
-     * Retorna 409 CONFLICT com mensagem clara para o operador recarregar e tentar novamente.
-     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiError.of(403, "FORBIDDEN", "Sem permissao para esta operacao"));
+    }
+
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<ApiError> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
         log.warn("Optimistic locking conflict: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(ApiError.of(409, "CONFLICT",
+                .body(ApiError.of(
+                        409,
+                        "CONFLICT",
                         "Pedido foi modificado por outro operador. Recarregue e tente novamente."));
     }
 
-    /**
-     * Fallback para qualquer exceção não tratada.
-     * Loga o erro completo internamente mas retorna mensagem genérica ao cliente.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
-        log.error("Erro interno não tratado", ex);
+        log.error("Erro interno nao tratado", ex);
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiError.of(500, "INTERNAL_SERVER_ERROR",
-                        "Erro interno. Tente novamente em instantes."));
+                .body(ApiError.of(500, "INTERNAL_SERVER_ERROR", "Erro interno. Tente novamente em instantes."));
     }
 }
