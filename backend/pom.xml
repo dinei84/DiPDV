@@ -16,6 +16,10 @@
 	<properties>
 		<java.version>21</java.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
+		<!-- Padrão: excluir integração no build rápido -->
+		<exclude.integration.tests>integration</exclude.integration.tests>
+		<!-- API mínima aceita pelo Docker Desktop WSL2 (docker-java padrão: 1.24 → 400) -->
+		<docker.api.version>1.47</docker.api.version>
 	</properties>
 	<dependencies>
 		<!-- Spring Boot Starters -->
@@ -136,10 +140,42 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Testcontainers -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<version>1.20.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>1.20.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>1.20.4</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Por padrão, excluir testes de integração (mais lentos) -->
+					<excludedGroups>${exclude.integration.tests}</excludedGroups>
+					<environmentVariables>
+						<!-- Docker Desktop WSL2 só aceita API >= 1.44; docker-java usa 1.24 por padrão -->
+						<DOCKER_API_VERSION>${docker.api.version}</DOCKER_API_VERSION>
+					</environmentVariables>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

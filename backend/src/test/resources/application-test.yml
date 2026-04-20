@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dipdv_test   # sobrescrito pelo Testcontainers
+    username: dipdv_app
+    password: dipdv_test
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false                                     # desligar no CI
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+logging:
+  level:
+    com.dipdv: WARN                                     # menos ruído nos testes
+    org.flywaydb: INFO                                  # ver migrations rodando
+    org.testcontainers: WARN
+
+dipdv:
+  jwt:
+    secret: test-secret-key-minimo-256-bits-para-hmac-sha256-aqui-test
+    expiration-ms: 3600000
