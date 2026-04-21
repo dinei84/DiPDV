@@ -168,12 +168,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<!-- Por padrão, excluir testes de integração (mais lentos) -->
 					<excludedGroups>${exclude.integration.tests}</excludedGroups>
-					<environmentVariables>
-						<!-- Docker Desktop WSL2 só aceita API >= 1.44; docker-java usa 1.24 por padrão -->
-						<DOCKER_API_VERSION>${docker.api.version}</DOCKER_API_VERSION>
-					</environmentVariables>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -197,6 +192,7 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
