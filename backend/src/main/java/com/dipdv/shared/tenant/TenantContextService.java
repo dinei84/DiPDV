@@ -89,8 +89,8 @@ public class TenantContextService {
         String targetStr = sanitizeUuid(targetTenantId.toString());
 
         entityManager.createNativeQuery(
-            "SET LOCAL app.is_super_admin = 'true'; " +
-            "SET LOCAL app.current_tenant = '" + tenantStr + "'"
+            "SET app.is_super_admin = 'true'; " +
+            "SET app.current_tenant = '" + tenantStr + "'"
         ).executeUpdate();
 
         // Registrar no TenantContext para rastreabilidade

@@ -40,7 +40,7 @@ public class AuditAspect {
         try {
             UUID tenantId = TenantContext.get();
             UUID userId = extractUserId();
-            UUID entityId = extractEntityId(joinPoint);
+            UUID entityId = extractEntityId(joinPoint, result);
 
             boolean isAdminAction = MasterTenantConstants.isMasterTenant(tenantId);
 
@@ -76,10 +76,16 @@ public class AuditAspect {
         return null;
     }
 
-    private UUID extractEntityId(JoinPoint joinPoint) {
+    private UUID extractEntityId(JoinPoint joinPoint, Object result) {
         Object[] args = joinPoint.getArgs();
         for (Object arg : args) {
             if (arg instanceof UUID uuid) return uuid;
+        }
+        if (result != null) {
+            try {
+                Object id = result.getClass().getMethod("id").invoke(result);
+                if (id instanceof UUID uuid) return uuid;
+            } catch (Exception ignored) {}
         }
         return null;
     }

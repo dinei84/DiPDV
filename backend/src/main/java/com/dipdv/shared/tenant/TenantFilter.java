@@ -55,7 +55,7 @@ public class TenantFilter extends OncePerRequestFilter {
         if (tenantId != null) {
             // Delega para o Service que executa o SET LOCAL dentro de uma transação gerenciada
             if (tenantId.equals(MASTER_TENANT_ID)) {
-                tenantContextService.applyTenantContextSuperAdmin();
+                tenantContextService.applyTenantContextSuperAdmin(tenantId);
             } else {
                 tenantContextService.applyTenantContext(tenantId);
             }

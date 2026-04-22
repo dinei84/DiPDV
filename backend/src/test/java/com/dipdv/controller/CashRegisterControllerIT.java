@@ -2,15 +2,30 @@ package com.dipdv.controller;
 
 import com.dipdv.support.ControllerIntegrationSupport;
 import com.dipdv.support.IntegrationTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @IntegrationTest
 class CashRegisterControllerIT extends ControllerIntegrationSupport {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void closePreviousCashRegister() {
+        jdbcTemplate.update(
+            "UPDATE cash_registers SET status = 'CLOSED' " +
+            "WHERE tenant_id = '00000000-0000-0000-0000-000000000001'::uuid " +
+            "AND status = 'OPEN'"
+        );
+    }
 
     @Test
     @DisplayName("POST /cash-registers com CASHIER → 201 OPEN")

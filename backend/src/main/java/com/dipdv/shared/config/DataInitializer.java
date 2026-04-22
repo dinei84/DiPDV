@@ -1,8 +1,6 @@
 package com.dipdv.shared.config;
 
-import com.dipdv.modules.auth.entity.User;
 import com.dipdv.modules.auth.entity.enums.UserRole;
-import com.dipdv.modules.auth.repository.UserRepository;
 import com.dipdv.shared.security.MasterTenantConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +15,7 @@ import java.util.UUID;
 
 /**
  * Cria dados iniciais de teste APENAS no perfil dev.
- * NUNCA executar em produção — anotação @Profile("dev") garante isso.
+ * NUNCA executar em produção — anotação @Profile({"dev", "test"}) garante isso.
  *
  * Credenciais de teste:
  *   tenantId: 00000000-0000-0000-0000-000000000001 (fixo para facilitar testes)
@@ -26,11 +24,10 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
-@Profile("dev")
+@Profile({"dev", "test"})
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
 
@@ -44,14 +41,17 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        // Criar SUPER_ADMIN (apenas se não existir)
-        // Usamos JdbcTemplate para bypassar o @PrePersist guard que exige SecurityContext
-        if (!userRepository.existsByEmailAndTenantIdAndDeletedAtIsNull(
-                SUPER_ADMIN_EMAIL, MASTER_TENANT_ID)) {
+        // SET deve coincidir com o tenant_id de cada bloco para passar o RLS WITH CHECK
+        jdbcTemplate.execute("SET app.current_tenant = 'ffffffff-ffff-ffff-ffff-ffffffffffff'");
+        Integer saCount = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM users WHERE email = ? " +
+            "AND tenant_id = ?::uuid AND deleted_at IS NULL",
+            Integer.class, SUPER_ADMIN_EMAIL, MASTER_TENANT_ID.toString());
+        if (saCount == null || saCount == 0) {
 
             jdbcTemplate.update(
                 "INSERT INTO users (id, tenant_id, email, password_hash, name, role, active) " +
-                "VALUES (gen_random_uuid(), ?::uuid, ?, ?, ?, ?::user_role, true)",
+                "VALUES ('ffffffff-ffff-ffff-ffff-ffffffffffff'::uuid, ?::uuid, ?, ?, ?, ?::user_role, true) ON CONFLICT (id) DO NOTHING",
                 MASTER_TENANT_ID.toString(),
                 SUPER_ADMIN_EMAIL,
                 passwordEncoder.encode("SuperAdmin@2025!"),
@@ -68,8 +68,12 @@ public class DataInitializer implements CommandLineRunner {
             log.info("╚══════════════════════════════════════════╝");
         }
 
-        if (userRepository.existsByEmailAndTenantIdAndDeletedAtIsNull(
-                "admin@dipdv.dev", DEV_TENANT_ID)) {
+        jdbcTemplate.execute("SET app.current_tenant = '00000000-0000-0000-0000-000000000001'");
+        Integer adminCount = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM users WHERE email = ? " +
+            "AND tenant_id = ?::uuid AND deleted_at IS NULL",
+            Integer.class, "admin@dipdv.dev", DEV_TENANT_ID.toString());
+        if (adminCount != null && adminCount > 0) {
             log.info("[DEV] Usuário de teste já existe — pulando seed");
             return;
         }
@@ -84,15 +88,15 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         // 2. Inserir usuário admin vinculado ao tenant
-        User admin = User.builder()
-            .tenantId(DEV_TENANT_ID)
-            .email("admin@dipdv.dev")
-            .passwordHash(passwordEncoder.encode("dipdv@2025"))
-            .name("Admin Dev")
-            .role(UserRole.ADMIN)
-            .build();
-
-        userRepository.save(admin);
+        jdbcTemplate.update(
+            "INSERT INTO users (id, tenant_id, email, password_hash, name, role, active) " +
+            "VALUES ('00000000-0000-0000-0001-000000000001'::uuid, ?::uuid, ?, ?, ?, ?::user_role, true) ON CONFLICT (id) DO NOTHING",
+            DEV_TENANT_ID.toString(),
+            "admin@dipdv.dev",
+            passwordEncoder.encode("dipdv@2025"),
+            "Admin Dev",
+            UserRole.ADMIN.name()
+        );
 
         log.info("╔══════════════════════════════════════════╗");
         log.info("║         SEED DE DESENVOLVIMENTO          ║");

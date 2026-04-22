@@ -4,7 +4,9 @@ import com.dipdv.shared.tenant.enums.TenantPlan;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -31,7 +33,8 @@ public class Tenant {
     private boolean active = true;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "plan_type", nullable = false, length = 20)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "plan_type", nullable = false, columnDefinition = "tenant_plan")
     @Builder.Default
     private TenantPlan planType = TenantPlan.TRIAL;
 

@@ -26,7 +26,7 @@ public class ProductController {
     private final CatalogService catalogService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    @PreAuthorize("hasAnyRole('CASHIER','MANAGER','ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Listar produtos (paginado)")
     public Page<ProductResponse> listProducts(
             @RequestParam(required = false) UUID categoryId,
@@ -35,7 +35,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    @PreAuthorize("hasAnyRole('CASHIER','MANAGER','ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Buscar produto por id")
     public ProductResponse getProductById(@PathVariable UUID id) {
         return catalogService.getProductById(id);
@@ -43,14 +43,14 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Criar produto")
     public ProductResponse createProduct(@RequestBody @Valid ProductRequest request) {
         return catalogService.createProduct(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Atualizar produto")
     public ProductResponse updateProduct(@PathVariable UUID id, @RequestBody @Valid ProductRequest request) {
         return catalogService.updateProduct(id, request);
@@ -58,14 +58,14 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Soft delete")
     public void deleteProduct(@PathVariable UUID id) {
         catalogService.deleteProduct(id);
     }
 
     @GetMapping("/low-stock")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPER_ADMIN')")
     @Operation(summary = "Produtos com estoque baixo")
     public List<ProductResponse> getLowStockProducts() {
         return catalogService.getLowStockProducts();
