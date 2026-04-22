@@ -3,6 +3,7 @@ package com.dipdv.shared.config;
 import com.dipdv.modules.auth.entity.User;
 import com.dipdv.modules.auth.entity.enums.UserRole;
 import com.dipdv.modules.auth.repository.UserRepository;
+import com.dipdv.shared.security.MasterTenantConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -25,7 +26,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
-@Profile({"dev", "test"})
+@Profile("dev")
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
@@ -37,11 +38,35 @@ public class DataInitializer implements CommandLineRunner {
     private static final UUID DEV_TENANT_ID =
         UUID.fromString("00000000-0000-0000-0000-000000000001");
 
+    private static final UUID MASTER_TENANT_ID = MasterTenantConstants.MASTER_TENANT_ID;
+    private static final String SUPER_ADMIN_EMAIL = "superadmin@dipdv.app";
+
     @Override
     @Transactional
     public void run(String... args) {
-        // Necessário setar app.current_tenant para o Hibernate conseguir ler/inserir com RLS ativo
-        jdbcTemplate.execute("SET LOCAL app.current_tenant = '" + DEV_TENANT_ID + "'");
+        // Criar SUPER_ADMIN (apenas se não existir)
+        // Usamos JdbcTemplate para bypassar o @PrePersist guard que exige SecurityContext
+        if (!userRepository.existsByEmailAndTenantIdAndDeletedAtIsNull(
+                SUPER_ADMIN_EMAIL, MASTER_TENANT_ID)) {
+
+            jdbcTemplate.update(
+                "INSERT INTO users (id, tenant_id, email, password_hash, name, role, active) " +
+                "VALUES (gen_random_uuid(), ?::uuid, ?, ?, ?, ?::user_role, true)",
+                MASTER_TENANT_ID.toString(),
+                SUPER_ADMIN_EMAIL,
+                passwordEncoder.encode("SuperAdmin@2025!"),
+                "Super Admin DiPDV",
+                UserRole.SUPER_ADMIN.name()
+            );
+
+            log.info("╔══════════════════════════════════════════╗");
+            log.info("║         SUPER ADMIN CRIADO               ║");
+            log.info("╠══════════════════════════════════════════╣");
+            log.info("║  email  : superadmin@dipdv.app           ║");
+            log.info("║  senha  : SuperAdmin@2025!               ║");
+            log.info("║  role   : SUPER_ADMIN                    ║");
+            log.info("╚══════════════════════════════════════════╝");
+        }
 
         if (userRepository.existsByEmailAndTenantIdAndDeletedAtIsNull(
                 "admin@dipdv.dev", DEV_TENANT_ID)) {

@@ -70,25 +70,40 @@ public class TenantContextService {
 
         entityManager.createNativeQuery(
                 "SET LOCAL app.current_tenant = '" + tenantIdStr + "'").executeUpdate();
-        entityManager.createNativeQuery(
-                "SET LOCAL app.is_super_admin = 'false'").executeUpdate();
 
         log.debug("TenantContext aplicado: {}", tenantIdStr);
     }
 
     /**
-     * Injeta o contexto de SUPER_ADMIN na transação PostgreSQL.
-     * Ativa o Kill Switch duplo do RLS (V8).
+     * Seta o contexto de SUPER_ADMIN no PostgreSQL.
+     * OBRIGATÓRIO: Ambas as flags devem ser setadas na mesma transação.
+     * O Kill Switch do RLS exige is_super_admin=true E current_tenant=masterUUID.
+     *
+     * @param targetTenantId UUID do tenant que o SUPER_ADMIN está acessando.
+     *                       Use MasterTenantConstants.MASTER_TENANT_ID para
+     *                       operações cross-tenant (ex: métricas globais).
      */
     @Transactional
-    public void applyTenantContextSuperAdmin() {
-        final String MASTER_UUID = "ffffffff-ffff-ffff-ffff-ffffffffffff";
-        
-        entityManager.createNativeQuery(
-                "SET LOCAL app.current_tenant = '" + MASTER_UUID + "'").executeUpdate();
-        entityManager.createNativeQuery(
-                "SET LOCAL app.is_super_admin = 'true'").executeUpdate();
+    public void applyTenantContextSuperAdmin(UUID targetTenantId) {
+        String tenantStr = com.dipdv.shared.security.MasterTenantConstants.MASTER_TENANT_ID_STR;
+        String targetStr = sanitizeUuid(targetTenantId.toString());
 
-        log.debug("Contexto SUPER_ADMIN aplicado (RLS Kill Switch ativo)");
+        entityManager.createNativeQuery(
+            "SET LOCAL app.is_super_admin = 'true'; " +
+            "SET LOCAL app.current_tenant = '" + tenantStr + "'"
+        ).executeUpdate();
+
+        // Registrar no TenantContext para rastreabilidade
+        TenantContext.set(targetTenantId);
+
+        log.info("[SUPER_ADMIN] Contexto ativado — target_tenant={}",
+            targetStr.equals(tenantStr) ? "GLOBAL" : targetStr);
+    }
+
+    private String sanitizeUuid(String uuid) {
+        if (!UUID_PATTERN.matcher(uuid).matches()) {
+            throw new IllegalArgumentException("UUID inválido: " + uuid);
+        }
+        return uuid;
     }
 }

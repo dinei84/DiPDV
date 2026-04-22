@@ -10,6 +10,9 @@ frontend/node_modules/
 frontend/.next/
 frontend/out/
 frontend/.env.local
+admin/node_modules/
+admin/.next/
+admin/out/
 
 # IDEs
 .idea/
@@ -47,11 +50,6 @@ Thumbs.db
 
 # Logs do backend
 backend/*.log
-
-# Node / Next.js Admin
-admin/node_modules/
-admin/.next/
-admin/out/
 
 # Claude IDE
 .claude/

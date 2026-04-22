@@ -1,12 +1,14 @@
 package com.dipdv.modules.auth.entity;
 
 import com.dipdv.modules.auth.entity.enums.UserRole;
+import com.dipdv.shared.security.MasterTenantConstants;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -55,4 +57,22 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+
+    @PrePersist
+    @PreUpdate
+    private void guardMasterTenant() {
+        if (MasterTenantConstants.isMasterTenant(this.tenantId)) {
+            // Verificar se quem está salvando é SUPER_ADMIN
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean isSuperAdmin = auth != null &&
+                auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+            if (!isSuperAdmin) {
+                throw new SecurityException(
+                    "Operação não permitida: tenant_id reservado para SUPER_ADMIN"
+                );
+            }
+        }
+    }
 }

@@ -33,14 +33,14 @@ public class ReportController {
     private final PdfReportService pdfReportService;
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<SalesSummaryResponse> getSalesSummary(
             @ModelAttribute ReportFilterRequest filter) {
         return ResponseEntity.ok(reportService.getSalesSummary(filter));
     }
 
     @GetMapping("/top-products")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<List<TopProductResponse>> getTopProducts(
             @ModelAttribute ReportFilterRequest filter,
             @RequestParam(defaultValue = "10") int limit) {
@@ -48,21 +48,21 @@ public class ReportController {
     }
 
     @GetMapping("/payment-methods")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<List<PaymentMethodSummary>> getRevenueByPaymentMethod(
             @ModelAttribute ReportFilterRequest filter) {
         return ResponseEntity.ok(reportService.getRevenueByPaymentMethod(filter));
     }
 
     @GetMapping("/cash-register/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<CashRegisterReportResponse> getCashRegisterReport(
             @PathVariable UUID id) {
         return ResponseEntity.ok(reportService.getCashRegisterReport(id));
     }
 
     @GetMapping(value = "/summary/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<byte[]> downloadSalesReportPdf(
             @ModelAttribute ReportFilterRequest filter) {
         byte[] pdf = pdfReportService.generateSalesReportPdf(filter);
@@ -74,7 +74,7 @@ public class ReportController {
     }
 
     @GetMapping(value = "/cash-register/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<byte[]> downloadCashRegisterPdf(
             @PathVariable UUID id) {
         byte[] pdf = pdfReportService.generateCashRegisterPdf(id);

@@ -79,6 +79,8 @@ public class SecurityConfig {
 
                 // ── Módulo Auth (público) ──────────────────────────────────
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/admin/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/admin/auth/logout").authenticated()
 
                 // ── Health check e documentação (público) ─────────────────
                 .requestMatchers("/actuator/health").permitAll()
@@ -142,8 +144,9 @@ public class SecurityConfig {
 
         // Desenvolvimento local
         config.setAllowedOrigins(List.of(
-            "http://localhost:3000",    // Next.js dev
-            "http://localhost:3001"     // Testes locais alternativos
+            "http://localhost:3000",    // PDV dev
+            "http://localhost:3001",    // Admin dev
+            "https://admin.dipdv.app"   // Admin prod
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

@@ -25,7 +25,7 @@ public class CategoryController {
     private final CatalogService catalogService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER', 'SUPER_ADMIN')")
     @Operation(summary = "Listar categorias (paginado)")
     public Page<CategoryResponse> listCategories(
             @PageableDefault(size = 20, sort = {"position", "name"}) Pageable pageable) {
@@ -33,7 +33,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER', 'SUPER_ADMIN')")
     @Operation(summary = "Buscar categoria por id")
     public CategoryResponse getCategoryById(@PathVariable UUID id) {
         return catalogService.getCategoryById(id);
@@ -41,14 +41,14 @@ public class CategoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Criar categoria")
     public CategoryResponse createCategory(@RequestBody @Valid CategoryRequest request) {
         return catalogService.createCategory(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Atualizar categoria")
     public CategoryResponse updateCategory(@PathVariable UUID id, @RequestBody @Valid CategoryRequest request) {
         return catalogService.updateCategory(id, request);
@@ -56,7 +56,7 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(summary = "Inativar categoria")
     public void deactivateCategory(@PathVariable UUID id) {
         catalogService.deactivateCategory(id);
