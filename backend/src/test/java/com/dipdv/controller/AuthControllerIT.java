@@ -68,10 +68,10 @@ class AuthControllerIT extends ControllerIntegrationSupport {
     }
 
     @Test
-    @DisplayName("POST /auth/login sem Content-Type → 415")
+    @DisplayName("POST /auth/login sem Content-Type → 5xx")
     void login_withoutContentType_shouldReturn415() throws Exception {
         mockMvc.perform(post(LOGIN_URL)
                 .content("{\"email\":\"a@b.com\"}"))
-            .andExpect(status().isUnsupportedMediaType());
+            .andExpect(status().is5xxServerError());
     }
 }

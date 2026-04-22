@@ -25,7 +25,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
-@Profile("dev")
+@Profile({"dev", "test"})
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
@@ -40,6 +40,9 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        // Necessário setar app.current_tenant para o Hibernate conseguir ler/inserir com RLS ativo
+        jdbcTemplate.execute("SET LOCAL app.current_tenant = '" + DEV_TENANT_ID + "'");
+
         if (userRepository.existsByEmailAndTenantIdAndDeletedAtIsNull(
                 "admin@dipdv.dev", DEV_TENANT_ID)) {
             log.info("[DEV] Usuário de teste já existe — pulando seed");

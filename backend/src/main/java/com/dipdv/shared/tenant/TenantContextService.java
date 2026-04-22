@@ -70,7 +70,25 @@ public class TenantContextService {
 
         entityManager.createNativeQuery(
                 "SET LOCAL app.current_tenant = '" + tenantIdStr + "'").executeUpdate();
+        entityManager.createNativeQuery(
+                "SET LOCAL app.is_super_admin = 'false'").executeUpdate();
 
         log.debug("TenantContext aplicado: {}", tenantIdStr);
+    }
+
+    /**
+     * Injeta o contexto de SUPER_ADMIN na transação PostgreSQL.
+     * Ativa o Kill Switch duplo do RLS (V8).
+     */
+    @Transactional
+    public void applyTenantContextSuperAdmin() {
+        final String MASTER_UUID = "ffffffff-ffff-ffff-ffff-ffffffffffff";
+        
+        entityManager.createNativeQuery(
+                "SET LOCAL app.current_tenant = '" + MASTER_UUID + "'").executeUpdate();
+        entityManager.createNativeQuery(
+                "SET LOCAL app.is_super_admin = 'true'").executeUpdate();
+
+        log.debug("Contexto SUPER_ADMIN aplicado (RLS Kill Switch ativo)");
     }
 }

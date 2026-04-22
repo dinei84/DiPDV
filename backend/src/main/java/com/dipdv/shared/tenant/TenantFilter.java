@@ -50,10 +50,15 @@ public class TenantFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         UUID tenantId = TenantContext.get();
+        final UUID MASTER_TENANT_ID = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff");
 
         if (tenantId != null) {
             // Delega para o Service que executa o SET LOCAL dentro de uma transação gerenciada
-            tenantContextService.applyTenantContext(tenantId);
+            if (tenantId.equals(MASTER_TENANT_ID)) {
+                tenantContextService.applyTenantContextSuperAdmin();
+            } else {
+                tenantContextService.applyTenantContext(tenantId);
+            }
         }
 
         filterChain.doFilter(request, response);

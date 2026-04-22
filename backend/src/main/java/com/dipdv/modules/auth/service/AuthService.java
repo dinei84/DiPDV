@@ -22,6 +22,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final com.dipdv.shared.tenant.TenantContextService tenantContextService;
 
     @Value("${dipdv.jwt.expiration-ms}")
     private long jwtExpirationMs;
@@ -46,6 +47,9 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // Mensagem genérica intencional — não revelar se é email ou senha
         final String INVALID_CREDENTIALS = "Email ou senha inválidos";
+
+        // Aplica o contexto de tenant para o RLS permitir a busca
+        tenantContextService.applyTenantContext(request.tenantId());
 
         User user = userRepository
             .findActiveByEmailAndTenantId(request.email(), request.tenantId())
