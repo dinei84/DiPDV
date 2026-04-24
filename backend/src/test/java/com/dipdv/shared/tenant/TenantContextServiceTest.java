@@ -30,7 +30,7 @@ class TenantContextServiceTest {
     private TenantContextService tenantContextService;
 
     @Test
-    void applyTenantContext_whenValidUuid_shouldExecuteSetLocal() {
+    void applyTenantContext_whenValidUuid_shouldExecuteSet() {
         UUID tenantId = UUID.randomUUID();
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.executeUpdate()).thenReturn(0);
@@ -39,7 +39,7 @@ class TenantContextServiceTest {
 
         // Verificar que o SQL executado contém o UUID correto
         verify(entityManager).createNativeQuery(
-            "SET LOCAL app.current_tenant = '" + tenantId.toString().toLowerCase() + "'"
+            "SET app.current_tenant = '" + tenantId.toString().toLowerCase() + "'"
         );
         verify(query).executeUpdate();
     }
@@ -63,7 +63,7 @@ class TenantContextServiceTest {
         tenantContextService.applyTenantContextSuperAdmin(targetTenantId);
 
         verify(entityManager).createNativeQuery(
-            "SET LOCAL app.is_super_admin = 'true'; SET LOCAL app.current_tenant = '" +
+            "SET app.is_super_admin = 'true'; SET app.current_tenant = '" +
             MasterTenantConstants.MASTER_TENANT_ID_STR + "'"
         );
         verify(query).executeUpdate();

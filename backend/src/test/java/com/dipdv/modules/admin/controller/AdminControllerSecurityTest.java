@@ -2,6 +2,7 @@ package com.dipdv.modules.admin.controller;
 
 import com.dipdv.modules.auth.dto.AuthResponse;
 import com.dipdv.modules.auth.dto.LoginRequest;
+import com.dipdv.support.PostgresIntegrationSupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 @Transactional
-class AdminControllerSecurityTest {
+class AdminControllerSecurityTest extends PostgresIntegrationSupport {
 
     private static final UUID DEV_TENANT_ID =
             UUID.fromString("00000000-0000-0000-0000-000000000001");

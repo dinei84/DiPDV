@@ -33,8 +33,7 @@ public record TenantSummaryResponse(
                         a[0] != null ? a[0].toString() : null,
                         a[1] != null ? a[1].toString() : null,
                         a[2] != null ? a[2].toString() : null,
-                        a[3] != null ? ((java.sql.Timestamp) a[3]).toInstant()
-                                .atOffset(java.time.ZoneOffset.UTC) : null
+                        toOffsetDateTime(a[3])
                 ))
                 .toList();
 
@@ -45,14 +44,21 @@ public record TenantSummaryResponse(
                 row[3] != null ? row[3].toString() : null,
                 row[4].toString(),
                 (Boolean) row[5],
-                row[6] != null ? ((java.sql.Timestamp) row[6]).toInstant()
-                        .atOffset(java.time.ZoneOffset.UTC) : null,
-                ((java.sql.Timestamp) row[7]).toInstant().atOffset(java.time.ZoneOffset.UTC),
+                toOffsetDateTime(row[6]),
+                toOffsetDateTime(row[7]),
                 ((Number) row[8]).longValue(),
                 ((Number) row[9]).longValue(),
                 ((Number) row[10]).longValue(),
                 ((Number) row[11]).doubleValue(),
                 auditItems
         );
+    }
+
+    private static OffsetDateTime toOffsetDateTime(Object value) {
+        if (value == null) return null;
+        if (value instanceof OffsetDateTime odt) return odt;
+        if (value instanceof java.time.Instant instant) return instant.atOffset(java.time.ZoneOffset.UTC);
+        if (value instanceof java.sql.Timestamp ts) return ts.toInstant().atOffset(java.time.ZoneOffset.UTC);
+        return null;
     }
 }

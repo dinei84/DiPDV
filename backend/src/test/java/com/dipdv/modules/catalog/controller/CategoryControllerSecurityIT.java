@@ -2,6 +2,7 @@ package com.dipdv.modules.catalog.controller;
 
 import com.dipdv.modules.catalog.dto.category.CategoryRequest;
 import com.dipdv.shared.security.JwtService;
+import com.dipdv.support.PostgresIntegrationSupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("dev") // Foca nas credenciais contidas no banco docker localhost
 @Transactional // Causa rollback dos testes ao invés de sujar o dev database
-class CategoryControllerSecurityIT {
+class CategoryControllerSecurityIT extends PostgresIntegrationSupport {
 
     @Autowired
     private MockMvc mockMvc;

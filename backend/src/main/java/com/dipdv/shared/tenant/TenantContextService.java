@@ -69,7 +69,7 @@ public class TenantContextService {
         }
 
         entityManager.createNativeQuery(
-                "SET LOCAL app.current_tenant = '" + tenantIdStr + "'").executeUpdate();
+                "SET app.current_tenant = '" + tenantIdStr + "'").executeUpdate();
 
         log.debug("TenantContext aplicado: {}", tenantIdStr);
     }

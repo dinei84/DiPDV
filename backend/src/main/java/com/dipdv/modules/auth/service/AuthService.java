@@ -25,6 +25,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final TenantRepository tenantRepository;
+    private final com.dipdv.shared.tenant.TenantContextService tenantContextService;
 
     @Value("${dipdv.jwt.expiration-ms}")
     private long jwtExpirationMs;
@@ -33,10 +34,11 @@ public class AuthService {
      * Autentica um usuário e retorna um JWT.
      *
      * FLUXO:
-     * 1. Busca usuário ativo pelo email + tenantId
-     * 2. Valida a senha com BCrypt
-     * 3. Gera JWT com claims: userId, tenantId, role
-     * 4. Retorna AuthResponse com token e dados do usuário
+     * 1. Seta contexto do tenant para o RLS
+     * 2. Busca usuário ativo pelo email + tenantId
+     * 3. Valida a senha com BCrypt
+     * 4. Gera JWT com claims: userId, tenantId, role
+     * 5. Retorna AuthResponse com token e dados do usuário
      *
      * SEGURANÇA:
      * - Sempre retorna a mesma mensagem de erro para email não encontrado
@@ -49,6 +51,13 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // Mensagem genérica intencional — não revelar se é email ou senha
         final String INVALID_CREDENTIALS = "Email ou senha inválidos";
+
+        // IMPORTANTE: Definir o contexto do tenant para que o RLS permita buscar o usuário
+        if (com.dipdv.shared.security.MasterTenantConstants.isMasterTenant(request.tenantId())) {
+            tenantContextService.applyTenantContextSuperAdmin(request.tenantId());
+        } else {
+            tenantContextService.applyTenantContext(request.tenantId());
+        }
 
         // Verificar status do tenant antes de validar credenciais
         tenantRepository.findById(request.tenantId()).ifPresent(tenant -> {

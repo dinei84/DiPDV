@@ -41,8 +41,10 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        log.info("[SEED] Iniciando inicialização de dados...");
+        
         // SET deve coincidir com o tenant_id de cada bloco para passar o RLS WITH CHECK
-        jdbcTemplate.execute("SET app.current_tenant = 'ffffffff-ffff-ffff-ffff-ffffffffffff'");
+        jdbcTemplate.execute("SET LOCAL app.current_tenant = 'ffffffff-ffff-ffff-ffff-ffffffffffff'");
         Integer saCount = jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM users WHERE email = ? " +
             "AND tenant_id = ?::uuid AND deleted_at IS NULL",
@@ -68,7 +70,7 @@ public class DataInitializer implements CommandLineRunner {
             log.info("╚══════════════════════════════════════════╝");
         }
 
-        jdbcTemplate.execute("SET app.current_tenant = '00000000-0000-0000-0000-000000000001'");
+        jdbcTemplate.execute("SET LOCAL app.current_tenant = '00000000-0000-0000-0000-000000000001'");
         Integer adminCount = jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM users WHERE email = ? " +
             "AND tenant_id = ?::uuid AND deleted_at IS NULL",
