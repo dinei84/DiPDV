@@ -1,10 +1,16 @@
 package com.dipdv.controller;
 
+import com.dipdv.shared.module.entity.TenantModule;
+import com.dipdv.shared.module.entity.TenantModuleId;
+import com.dipdv.shared.module.repository.TenantModuleRepository;
 import com.dipdv.support.ControllerIntegrationSupport;
 import com.dipdv.support.IntegrationTest;
+import com.dipdv.support.RlsTestHelper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,6 +23,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @IntegrationTest
 class SecurityControllerIT extends ControllerIntegrationSupport {
+
+    @Autowired
+    private TenantModuleRepository tenantModuleRepository;
+
+    @Autowired
+    private RlsTestHelper rlsHelper;
+
+    @BeforeEach
+    void setupModules() {
+        rlsHelper.runAsSuperAdmin(() -> {
+            tenantModuleRepository.save(TenantModule.builder()
+                    .id(new TenantModuleId(TENANT_ID, "REPORTS"))
+                    .enabled(true)
+                    .build());
+        });
+    }
 
     // ── Endpoints públicos ────────────────────────────────────────────────
 

@@ -1,5 +1,7 @@
 package com.dipdv.shared.exception;
 
+import com.dipdv.shared.module.dto.ModuleErrorResponse;
+import com.dipdv.shared.module.exception.ModuleNotEnabledException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,6 +73,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiError.of(403, "FORBIDDEN", "Sem permissao para esta operacao"));
+    }
+
+    @ExceptionHandler(ModuleNotEnabledException.class)
+    public ResponseEntity<ModuleErrorResponse> handleModuleNotEnabled(ModuleNotEnabledException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ModuleErrorResponse("MODULE_NOT_ENABLED", ex.getModuleCode()));
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)

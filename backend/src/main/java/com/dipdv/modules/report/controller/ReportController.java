@@ -7,6 +7,7 @@ import com.dipdv.modules.report.dto.SalesSummaryResponse;
 import com.dipdv.modules.report.dto.TopProductResponse;
 import com.dipdv.modules.report.service.PdfReportService;
 import com.dipdv.modules.report.service.ReportService;
+import com.dipdv.shared.module.annotation.RequiresModule;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +28,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/reports")
 @RequiredArgsConstructor
 @Tag(name = "Relatórios", description = "Relatórios de vendas e caixa")
+@RequiresModule("REPORTS")
 public class ReportController {
 
     private final ReportService reportService;
