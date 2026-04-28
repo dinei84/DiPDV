@@ -19,7 +19,7 @@ export default function TenantsPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiGet<TenantResponse[]>('/admin/tenants');
+        const data = await apiGet<TenantResponse[]>('/api/v1/admin/tenants');
         setTenants(data);
       } catch (err) {
         const message =

@@ -16,7 +16,7 @@ export default function NewTenantPage() {
     try {
       setIsLoading(true);
       const response = await apiPost<TenantResponse>(
-        '/admin/tenants',
+        '/api/v1/admin/tenants',
         data
       );
       addToast('success', 'Tenant criado');

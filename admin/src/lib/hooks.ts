@@ -30,12 +30,12 @@ export function useTenantModules(
 
         // Fetch catalog
         const catalog = await apiGet<ModuleCatalogItem[]>(
-          '/admin/modules/catalog'
+          '/api/v1/admin/modules/catalog'
         );
 
         // Fetch enabled codes for tenant
         const enabledCodes = await apiGet<string[]>(
-          `/admin/modules/tenants/${tenantId}`
+          `/api/v1/admin/modules/tenants/${tenantId}`
         );
 
         if (isMounted) {

@@ -37,7 +37,7 @@ export default function ModuleToggle({
     try {
       const action = isOptimistic ? 'disable' : 'enable';
       await apiPost(
-        `/admin/modules/tenants/${tenantId}/${action}`,
+        `/api/v1/admin/modules/tenants/${tenantId}/${action}`,
         { code }
       );
       if (onToggle) {

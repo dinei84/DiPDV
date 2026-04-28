@@ -31,7 +31,7 @@ export default function EditTenantPage() {
         setTenantLoading(true);
         setTenantError(null);
         const data = await apiGet<TenantResponse>(
-          `/admin/tenants/${tenantId}`
+          `/api/v1/admin/tenants/${tenantId}`
         );
         setTenant(data);
       } catch (err) {
@@ -52,7 +52,7 @@ export default function EditTenantPage() {
     try {
       setIsSavingTenant(true);
       const updated = await apiPut<TenantResponse>(
-        `/admin/tenants/${tenantId}`,
+        `/api/v1/admin/tenants/${tenantId}`,
         data
       );
       setTenant(updated);
