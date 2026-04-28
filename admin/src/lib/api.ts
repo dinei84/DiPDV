@@ -13,6 +13,14 @@ export class ApiError extends Error {
   }
 }
 
+function safeParseJson(text: string) {
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit
@@ -37,21 +45,23 @@ export async function apiFetch<T>(
     throw new ApiError(res.status, null, 'Unauthorized');
   }
 
+  // Common body extraction logic for error and success
+  const text = await res.text();
+  const body = safeParseJson(text);
+
   // Handle 403 Forbidden - throw error without logout
   if (res.status === 403) {
-    const body = await res.json().catch(() => null);
     const message = (body as { message?: string } | null)?.message ?? 'Forbidden';
     throw new ApiError(res.status, body, message);
   }
 
   // Handle other errors
   if (!res.ok) {
-    const body = await res.json().catch(() => null);
     const message = (body as { message?: string } | null)?.message ?? `HTTP ${res.status}`;
     throw new ApiError(res.status, body, message);
   }
 
-  return res.json();
+  return body as T;
 }
 
 export async function apiGet<T>(path: string): Promise<T> {

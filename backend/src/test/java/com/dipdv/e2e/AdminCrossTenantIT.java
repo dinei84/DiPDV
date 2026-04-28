@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -22,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Testes E2E do módulo SUPER_ADMIN:
  * - Acesso cross-tenant a dados de qualquer tenant
- * - Onboarding atômico de novo tenant + owner
+ * - CRUD de tenants para o painel SUPER_ADMIN
  * - Métricas globais consolidadas
  * - Suspensão de tenant bloqueia login
  * - Isolamento: SUPER_ADMIN não vê dados via endpoints de tenant normal
@@ -42,6 +43,7 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
     @Autowired ObjectMapper objectMapper;
     @Autowired JwtService jwtService;
     @Autowired JdbcTemplate jdbc;
+    @Autowired PasswordEncoder passwordEncoder;
 
     String superAdminToken;
     String adminToken;
@@ -120,8 +122,8 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
     }
 
     @Test
-    @DisplayName("Onboarding atômico: criar tenant + owner em transação única")
-    void createTenant_shouldCreateTenantAndOwnerAtomically() throws Exception {
+    @DisplayName("Criação de tenant ativa módulos BASE")
+    void createTenant_shouldEnableBaseModules() throws Exception {
         String slug = "lanchonete-e2e-" + System.currentTimeMillis();
 
         MvcResult result = mockMvc.perform(post("/api/v1/admin/tenants")
@@ -130,27 +132,24 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
                 .content("""
                     {
                       "name": "Lanchonete E2E Test",
-                      "slug": "%s",
-                      "ownerEmail": "owner@e2e-test.com",
-                      "ownerName": "Owner E2E",
-                      "ownerPassword": "Senha@123"
+                      "slug": "%s"
                     }
                 """.formatted(slug)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.name").value("Lanchonete E2E Test"))
-            .andExpect(jsonPath("$.planType").value("TRIAL"))
             .andExpect(jsonPath("$.active").value(true))
+            .andExpect(jsonPath("$.enabledModules[?(@ == 'PDV_BASIC')]").exists())
+            .andExpect(jsonPath("$.enabledModules[?(@ == 'CATALOG_MANAGEMENT')]").exists())
             .andReturn();
 
         String newTenantId = id(result);
         assertThat(newTenantId).isNotBlank();
 
-        // Verificar que o owner foi criado no banco
-        Integer ownerCount = jdbc.queryForObject(
-            "SELECT COUNT(*) FROM users " +
-            "WHERE tenant_id = ?::uuid AND email = 'owner@e2e-test.com'",
+        Integer enabledModules = jdbc.queryForObject(
+            "SELECT COUNT(*) FROM tenant_modules " +
+            "WHERE tenant_id = ?::uuid AND module_code IN ('PDV_BASIC', 'CATALOG_MANAGEMENT') AND enabled = true",
             Integer.class, newTenantId);
-        assertThat(ownerCount).isEqualTo(1);
+        assertThat(enabledModules).isEqualTo(2);
     }
 
     @Test
@@ -165,10 +164,7 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
                 .content("""
                     {
                       "name": "Tenant Slug Dup 1",
-                      "slug": "%s",
-                      "ownerEmail": "dup1@e2e-test.com",
-                      "ownerName": "Dup 1",
-                      "ownerPassword": "Senha@123"
+                      "slug": "%s"
                     }
                 """.formatted(slug)))
             .andExpect(status().isCreated());
@@ -180,10 +176,7 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
                 .content("""
                     {
                       "name": "Tenant Slug Dup 2",
-                      "slug": "%s",
-                      "ownerEmail": "dup2@e2e-test.com",
-                      "ownerName": "Dup 2",
-                      "ownerPassword": "Senha@123"
+                      "slug": "%s"
                     }
                 """.formatted(slug)))
             .andExpect(status().isConflict())
@@ -201,16 +194,24 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
                 .content("""
                     {
                       "name": "Tenant Para Suspender",
-                      "slug": "%s",
-                      "ownerEmail": "suspend@e2e-test.com",
-                      "ownerName": "Suspend Owner",
-                      "ownerPassword": "Senha@123"
+                      "slug": "%s"
                     }
                 """.formatted(slug)))
             .andExpect(status().isCreated())
             .andReturn();
 
         String tenantId = id(createResult);
+
+        jdbc.execute("SET LOCAL app.current_tenant = 'ffffffff-ffff-ffff-ffff-ffffffffffff'");
+        jdbc.execute("SET LOCAL app.is_super_admin = 'true'");
+        jdbc.update(
+            "INSERT INTO users (tenant_id, email, password_hash, name, role, active) " +
+            "VALUES (?::uuid, ?, ?, ?, 'ADMIN'::user_role, true)",
+            tenantId,
+            "suspend@e2e-test.com",
+            passwordEncoder.encode("Senha@123"),
+            "Suspend Owner"
+        );
 
         // Login deve funcionar antes da suspensão
         mockMvc.perform(post("/api/v1/auth/login")
@@ -226,11 +227,12 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
             .andExpect(jsonPath("$.token").isNotEmpty());
 
         // Suspender tenant
-        mockMvc.perform(delete("/api/v1/admin/tenants/" + tenantId)
+        mockMvc.perform(put("/api/v1/admin/tenants/" + tenantId)
                 .header("Authorization", superAdminToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"reason\": \"Teste de suspensão E2E\"}"))
-            .andExpect(status().isNoContent());
+                .content("{\"active\": false}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.active").value(false));
 
         // Login deve ser bloqueado após suspensão
         mockMvc.perform(post("/api/v1/auth/login")

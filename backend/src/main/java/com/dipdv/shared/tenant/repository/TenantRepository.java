@@ -22,6 +22,8 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
 
     List<Tenant> findByActiveTrue();
 
+    List<Tenant> findAllByIdNotOrderByCreatedAtDesc(UUID id);
+
     List<Tenant> findByPlanType(TenantPlan planType);
 
     // Atualiza last_activity_at — chamado pelo OrderService

@@ -21,19 +21,21 @@ export default function TenantForm({
   const [errors, setErrors] = useState<{ name?: string }>({});
 
   useEffect(() => {
-    // Auto-fill slug from name on name blur
-    if (name && !slug) {
+    // Auto-fill slug from name on name change ONLY during creation
+    const isEditMode = !!initialData;
+    if (!isEditMode && name && !slug) {
       const autoSlug = name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
       setSlug(autoSlug);
     }
-  }, [name, slug]);
+  }, [name, slug, initialData]);
 
   const handleNameBlur = () => {
-    // Auto-fill slug if empty
-    if (name && !slug) {
+    // Auto-fill slug if empty ONLY during creation
+    const isEditMode = !!initialData;
+    if (!isEditMode && name && !slug) {
       const autoSlug = name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')

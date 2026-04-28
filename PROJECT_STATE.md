@@ -47,7 +47,8 @@
 - `CategoryControllerSecurityIT` instável sem banco ativo
 - `last_activity_at` em tenants: update via `OrderService.closeOrder()` ✅
 - `ip_address inet` no `AuditLog`: campo ignorado no insert (débito)
-- Admin frontend: smoke tests manuais não validados em runtime
+- Bug do toggle de módulos resolvido (apiFetch resiliente a 204 No Content) ✅
+- **Dívida técnica:** Campo `active` ausente no `TenantForm.tsx` — soft delete via UI não disponível (necessário adicionar em sprint própria).
 
 ## Decisões arquiteturais registradas
 
@@ -57,6 +58,14 @@
 - ADR-004: Idempotência em Payments (`idempotency_key`)
 - ADR-005: Auditoria via AOP (`@AfterReturning`)
 - ADR-006: SUPER_ADMIN via UUID master + Kill Switch duplo
+
+## Decisões de produto
+
+- **Distribuição de credenciais (decidida em 2026-04-28):**
+  Modelo B — convite por link com token. Token tem expiração de 30 dias e é use-once. Sem SMTP no MVP — link enviado manualmente por canal externo (WhatsApp/email). Implementação adiada — primeiro tenant real será o próprio fundador, credenciais hardcoded bastam por enquanto. Sprint específica acontece quando segundo tenant real aparecer.
+
+- **Slug do tenant na edição:**
+  Slug é editável manualmente. Não é re-derivado automaticamente do nome após criação. Mudança de slug é decisão consciente do SUPER_ADMIN.
 
 ## Próxima ação
 

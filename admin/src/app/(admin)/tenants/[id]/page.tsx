@@ -58,10 +58,14 @@ export default function EditTenantPage() {
       setTenant(updated);
       addToast('success', 'Dados salvos');
     } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? err.message
-          : 'Erro ao salvar tenant';
+      let message = 'Erro ao salvar tenant';
+      if (err instanceof ApiError) {
+        if (err.status === 409) {
+          message = 'Este slug já está sendo usado por outro tenant';
+        } else {
+          message = err.message;
+        }
+      }
       addToast('error', message);
     } finally {
       setIsSavingTenant(false);

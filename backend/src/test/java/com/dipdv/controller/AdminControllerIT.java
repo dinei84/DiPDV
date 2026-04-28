@@ -48,15 +48,13 @@ class AdminControllerIT extends ControllerIntegrationSupport {
                 .content("""
                     {
                       "name": "Lanchonete IT Test",
-                      "slug": "lanchonete-it-test",
-                      "ownerEmail": "owner@it-test.com",
-                      "ownerName": "Owner IT",
-                      "ownerPassword": "Senha@123"
+                      "slug": "lanchonete-it-test"
                     }
                 """))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.name").value("Lanchonete IT Test"))
-            .andExpect(jsonPath("$.planType").value("TRIAL"));
+            .andExpect(jsonPath("$.active").value(true))
+            .andExpect(jsonPath("$.enabledModules").isArray());
     }
 
     @Test
@@ -65,10 +63,7 @@ class AdminControllerIT extends ControllerIntegrationSupport {
         String body = """
             {
               "name": "Tenant Slug Dup",
-              "slug": "slug-duplicado-it",
-              "ownerEmail": "dup@it-test.com",
-              "ownerName": "Owner Dup",
-              "ownerPassword": "Senha@123"
+              "slug": "slug-duplicado-it"
             }
         """;
 
