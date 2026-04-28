@@ -1,5 +1,7 @@
 import { AuthData } from './types';
 
+export type { AuthData };
+
 const TOKEN_KEY = 'dipdv_admin_token';
 const USER_KEY = 'dipdv_admin_user';
 
