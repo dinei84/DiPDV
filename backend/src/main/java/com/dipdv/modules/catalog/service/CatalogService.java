@@ -36,37 +36,40 @@ public class CatalogService {
     // ============================================
 
     @Transactional(readOnly = true)
-    public Page<CategoryResponse> listCategories(Pageable pageable) {
+    public Page<CategoryResponse> listCategories(Pageable pageable, boolean includeDeleted) {
         UUID tenantId = TenantContext.getRequired();
-        return categoryRepository.findByTenantIdAndActiveTrueOrderByPositionAsc(tenantId, pageable)
-                .map(this::toResponse);
+        Page<Category> page = includeDeleted
+                ? categoryRepository.findByTenantIdOrderByPositionAsc(tenantId, pageable)
+                : categoryRepository.findByTenantIdAndDeletedAtIsNullOrderByPositionAsc(tenantId, pageable);
+        return page.map(this::toCategoryResponse);
     }
 
     @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(UUID id) {
-        return toResponse(findCategoryByIdOrThrow(id));
+        return toCategoryResponse(findCategoryByIdOrThrow(id));
     }
 
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
         UUID tenantId = TenantContext.getRequired();
 
-        // Validação: duplicidade de nome
-        if (categoryRepository.existsByTenantIdAndNameAndActiveTrue(tenantId, request.name())) {
+        // Validação: duplicidade de nome (não deletadas)
+        if (categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(tenantId, request.name())) {
             throw new BusinessException("Já existe uma categoria com este nome", HttpStatus.CONFLICT);
         }
 
         Category category = Category.builder()
                 .tenantId(tenantId)
                 .name(request.name())
-                .position(request.position())
-                .active(request.active())
+                .icon(request.icon())
+                .isDefault(false)
+                .position(0)
                 .build();
 
         category = categoryRepository.save(category);
         log.info("Categoria criada: {} pelo tenant: {}", category.getId(), tenantId);
 
-        return toResponse(category);
+        return toCategoryResponse(category);
     }
 
     @Transactional
@@ -74,26 +77,37 @@ public class CatalogService {
         Category category = findCategoryByIdOrThrow(id);
 
         if (!category.getName().equalsIgnoreCase(request.name()) &&
-                categoryRepository.existsByTenantIdAndNameAndActiveTrue(category.getTenantId(), request.name())) {
+                categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(category.getTenantId(), request.name())) {
             throw new BusinessException("Já existe uma categoria com este nome", HttpStatus.CONFLICT);
         }
 
         category.setName(request.name());
-        category.setPosition(request.position());
-        category.setActive(request.active());
+        category.setIcon(request.icon());
 
         category = categoryRepository.save(category);
         log.info("Categoria atualizada: {} pelo tenant: {}", category.getId(), category.getTenantId());
 
-        return toResponse(category);
+        return toCategoryResponse(category);
     }
 
     @Transactional
-    public void deactivateCategory(UUID id) {
+    public void deleteCategory(UUID id) {
         Category category = findCategoryByIdOrThrow(id);
-        category.setActive(false);
+
+        // Validação: não permite deletar categoria padrão
+        if (category.getIsDefault()) {
+            throw new BusinessException("Categoria padrão não pode ser excluída", HttpStatus.BAD_REQUEST);
+        }
+
+        // Validação: não permite deletar categoria com produtos vinculados (mesmo soft-deleted)
+        long productCount = productRepository.countByTenantIdAndCategoryId(category.getTenantId(), id);
+        if (productCount > 0) {
+            throw new BusinessException("Categoria não pode ser excluída pois possui produtos vinculados", HttpStatus.BAD_REQUEST);
+        }
+
+        category.setDeletedAt(OffsetDateTime.now());
         categoryRepository.save(category);
-        log.info("Categoria inativada: {} pelo tenant: {}", id, category.getTenantId());
+        log.info("Categoria deletada (soft delete): {} pelo tenant: {}", id, category.getTenantId());
     }
 
     // ============================================
@@ -101,21 +115,26 @@ public class CatalogService {
     // ============================================
 
     @Transactional(readOnly = true)
-    public Page<ProductResponse> listProducts(UUID categoryId, Pageable pageable) {
+    public Page<ProductResponse> listProducts(UUID categoryId, Pageable pageable, boolean includeDeleted) {
         UUID tenantId = TenantContext.getRequired();
 
+        Page<Product> page;
         if (categoryId != null) {
-            return productRepository.findByTenantIdAndCategoryIdAndActiveTrueAndDeletedAtIsNull(tenantId, categoryId, pageable)
-                    .map(this::toResponse);
+            page = includeDeleted
+                    ? productRepository.findByTenantIdAndCategoryId(tenantId, categoryId, pageable)
+                    : productRepository.findByTenantIdAndCategoryIdAndDeletedAtIsNull(tenantId, categoryId, pageable);
+        } else {
+            page = includeDeleted
+                    ? productRepository.findByTenantId(tenantId, pageable)
+                    : productRepository.findByTenantIdAndDeletedAtIsNull(tenantId, pageable);
         }
 
-        return productRepository.findByTenantIdAndActiveTrueAndDeletedAtIsNull(tenantId, pageable)
-                .map(this::toResponse);
+        return page.map(this::toProductResponse);
     }
 
     @Transactional(readOnly = true)
     public ProductResponse getProductById(UUID id) {
-        return toResponse(findProductByIdOrThrow(id));
+        return toProductResponse(findProductByIdOrThrow(id));
     }
 
     @Transactional
@@ -126,8 +145,9 @@ public class CatalogService {
             throw new BusinessException("Já existe um produto com este nome", HttpStatus.CONFLICT);
         }
 
+        // Validação: categoria deve existir se informada
         if (request.categoryId() != null) {
-            findCategoryByIdOrThrow(request.categoryId()); // Garante que a categoria existe e pertence ao tenant
+            findCategoryByIdOrThrow(request.categoryId());
         }
 
         Product product = Product.builder()
@@ -136,15 +156,14 @@ public class CatalogService {
                 .name(request.name())
                 .description(request.description())
                 .price(request.price())
-                .stockQuantity(request.stockQuantity())
-                .stockMinLevel(request.stockMinLevel())
-                .active(request.active())
+                .stockQuantity(0)
+                .stockMinLevel(0)
                 .build();
 
         product = productRepository.save(product);
         log.info("Produto criado: {} pelo tenant: {}", product.getId(), tenantId);
 
-        return toResponse(product);
+        return toProductResponse(product);
     }
 
     @Transactional
@@ -156,30 +175,26 @@ public class CatalogService {
             throw new BusinessException("Já existe um produto com este nome", HttpStatus.CONFLICT);
         }
 
+        // Validação: categoria deve existir se informada
         if (request.categoryId() != null && !request.categoryId().equals(product.getCategoryId())) {
             findCategoryByIdOrThrow(request.categoryId());
         }
 
-        product.setCategoryId(request.categoryId());
         product.setName(request.name());
         product.setDescription(request.description());
         product.setPrice(request.price());
-        product.setStockQuantity(request.stockQuantity());
-        product.setStockMinLevel(request.stockMinLevel());
-        product.setActive(request.active());
+        product.setCategoryId(request.categoryId());
 
         product = productRepository.save(product);
         log.info("Produto atualizado: {} pelo tenant: {}", product.getId(), product.getTenantId());
 
-        return toResponse(product);
+        return toProductResponse(product);
     }
 
     @Transactional
     public void deleteProduct(UUID id) {
         Product product = findProductByIdOrThrow(id);
         product.setDeletedAt(OffsetDateTime.now());
-        product.setActive(false);
-        // Não apagamos fisicamente. O Soft Delete entra em ação marcando deletedAt = now()
         productRepository.save(product);
         log.info("Produto deletado (soft delete): {} pelo tenant: {}", id, product.getTenantId());
     }
@@ -188,17 +203,17 @@ public class CatalogService {
     public List<ProductResponse> getLowStockProducts() {
         UUID tenantId = TenantContext.getRequired();
         return productRepository.findLowStockProducts(tenantId).stream()
-                .map(this::toResponse)
+                .map(this::toProductResponse)
                 .collect(Collectors.toList());
     }
 
     // ============================================
-    // MÉTODOS PRIVADOS DE AUXÍLIO (Mappers / Fetch)
+    // MÉTODOS PRIVADOS DE AUXÍLIO
     // ============================================
 
     private Category findCategoryByIdOrThrow(UUID id) {
         UUID tenantId = TenantContext.getRequired();
-        return categoryRepository.findByIdAndTenantId(id, tenantId)
+        return categoryRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, tenantId)
                 .orElseThrow(() -> new BusinessException("Categoria não encontrada", HttpStatus.NOT_FOUND));
     }
 
@@ -208,26 +223,44 @@ public class CatalogService {
                 .orElseThrow(() -> new BusinessException("Produto não encontrado", HttpStatus.NOT_FOUND));
     }
 
-    private CategoryResponse toResponse(Category category) {
+    private CategoryResponse toCategoryResponse(Category category) {
+        long productCount = productRepository.countByTenantIdAndCategoryIdAndDeletedAtIsNull(
+                category.getTenantId(), category.getId());
+
         return new CategoryResponse(
                 category.getId(),
                 category.getName(),
+                category.getIcon(),
+                category.getIsDefault(),
                 category.getPosition(),
-                category.getActive(),
+                productCount,
+                category.getDeletedAt(),
                 category.getCreatedAt()
         );
     }
 
-    private ProductResponse toResponse(Product product) {
+    private ProductResponse toProductResponse(Product product) {
+        String categoryName = null;
+        String categoryIcon = null;
+
+        if (product.getCategoryId() != null) {
+            Category category = categoryRepository.findByIdAndTenantId(product.getCategoryId(), product.getTenantId())
+                    .orElse(null);
+            if (category != null) {
+                categoryName = category.getName();
+                categoryIcon = category.getIcon();
+            }
+        }
+
         return new ProductResponse(
                 product.getId(),
                 product.getCategoryId(),
+                categoryName,
+                categoryIcon,
                 product.getName(),
                 product.getDescription(),
                 product.getPrice(),
-                product.getStockQuantity(),
-                product.getStockMinLevel(),
-                product.getActive(),
+                product.getDeletedAt(),
                 product.getCreatedAt(),
                 product.getUpdatedAt()
         );

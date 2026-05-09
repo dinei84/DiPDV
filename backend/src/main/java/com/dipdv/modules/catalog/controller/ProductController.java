@@ -27,11 +27,12 @@ public class ProductController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('CASHIER','MANAGER','ADMIN','SUPER_ADMIN')")
-    @Operation(summary = "Listar produtos (paginado)")
+    @Operation(summary = "Listar produtos (paginado). Use ?includeDeleted=true para incluir deletados.")
     public Page<ProductResponse> listProducts(
             @RequestParam(required = false) UUID categoryId,
-            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
-        return catalogService.listProducts(categoryId, pageable);
+            @PageableDefault(size = 20, sort = "name") Pageable pageable,
+            @RequestParam(defaultValue = "false") boolean includeDeleted) {
+        return catalogService.listProducts(categoryId, pageable, includeDeleted);
     }
 
     @GetMapping("/{id}")

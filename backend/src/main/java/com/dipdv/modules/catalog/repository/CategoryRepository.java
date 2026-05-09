@@ -12,12 +12,21 @@ import java.util.UUID;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
-    // Listar categorias ativas do tenant com paginação
-    Page<Category> findByTenantIdAndActiveTrueOrderByPositionAsc(UUID tenantId, Pageable pageable);
+    // Listar categorias não deletadas do tenant com paginação
+    Page<Category> findByTenantIdAndDeletedAtIsNullOrderByPositionAsc(UUID tenantId, Pageable pageable);
 
-    // Verificar duplicidade de nome no tenant
-    boolean existsByTenantIdAndNameAndActiveTrue(UUID tenantId, String name);
+    // Listar categorias incluindo deletadas
+    Page<Category> findByTenantIdOrderByPositionAsc(UUID tenantId, Pageable pageable);
 
-    // Buscar por id garantindo que pertence ao tenant (RLS já filtra, mas boa prática)
+    // Verificar duplicidade de nome no tenant (não deletadas)
+    boolean existsByTenantIdAndNameAndDeletedAtIsNull(UUID tenantId, String name);
+
+    // Verificar duplicidade de nome no tenant (inclusive deletadas)
+    boolean existsByTenantIdAndName(UUID tenantId, String name);
+
+    // Buscar por id garantindo que pertence ao tenant (não deletada)
+    Optional<Category> findByIdAndTenantIdAndDeletedAtIsNull(UUID id, UUID tenantId);
+
+    // Buscar por id (inclusive deletada)
     Optional<Category> findByIdAndTenantId(UUID id, UUID tenantId);
 }

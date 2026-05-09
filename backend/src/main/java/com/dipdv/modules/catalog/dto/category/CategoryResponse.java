@@ -6,8 +6,14 @@ import java.util.UUID;
 public record CategoryResponse(
         UUID id,
         String name,
+        String icon,
+        Boolean isDefault,
         Integer position,
-        Boolean active,
+        Long productCount,
+        OffsetDateTime deletedAt,
         OffsetDateTime createdAt
 ) {
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
 }

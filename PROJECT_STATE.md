@@ -1,7 +1,7 @@
 # DiPDV — Estado do Projeto
 
 > Atualizar após cada sprint/entrega. Substitui relatórios longos.
-> Última atualização: 2026-04-20
+> Última atualização: 2026-05-09
 
 ---
 
@@ -11,7 +11,8 @@
 |---|---|---|
 | Unitários (Services) | 59 | ✅ |
 | RLS (Testcontainers) | 10 | ✅ |
-| Controllers (HTTP) | ~30 | 🔄 T2 em execução |
+| Controllers (HTTP) | 13 (Catalog) | ✅ Catálogo refatorado |
+| Controllers Gerais | ~30 | 🔄 T2 em execução |
 | E2E fluxo de venda | 0 | 🔲 T3 pendente |
 | Admin cross-tenant | 0 | 🔲 T4 pendente |
 
@@ -27,6 +28,9 @@
 | V6 | nfce_documents |
 | V7 | cash_register_id em payments |
 | V8 | SUPER_ADMIN + tenant master + Kill Switch RLS |
+| V9 | RLS Kill Switch para SUPER_ADMIN |
+| V10 | Módulos (CATALOG_MANAGEMENT, INVENTORY, ORDERS, etc.) |
+| V11 | Refatoração Catálogo: icon + is_default em categories, deleted_at em ambas, backfill "Diversos" |
 
 ## Endpoints ativos
 
@@ -44,11 +48,13 @@
 
 ## Bugs conhecidos / débitos técnicos
 
-- `CategoryControllerSecurityIT` instável sem banco ativo
 - `last_activity_at` em tenants: update via `OrderService.closeOrder()` ✅
 - `ip_address inet` no `AuditLog`: campo ignorado no insert (débito)
 - Bug do toggle de módulos resolvido (apiFetch resiliente a 204 No Content) ✅
-- **Dívida técnica:** Campo `active` ausente no `TenantForm.tsx` — soft delete via UI não disponível (necessário adicionar em sprint própria).
+- **Dívida técnica — categories.position não exposto:**
+  Campo existe na tabela (padrão 0) mas não é exposto na API. Implementar reordenação drag-and-drop em sprint futura de polimento de catálogo.
+- **Dívida técnica — stock fields removidos da API:**
+  `stockQuantity` e `stockMinLevel` foram removidos de ProductRequest/Response pois o módulo INVENTORY não foi implementado. Entidade mantém os campos (padrão 0) para futura habilitação.
 
 ### Sprint 3a - Débitos reportados
 - **`frontend/src/app/page.tsx`** — Raiz do PDV ainda com template default do Next.js. Causa: não foi consertado durante sprints anteriores. Acessar `localhost:3000/` mostra "To get started, edit the page.tsx" em vez de redirecionar para login. Impacto baixo (navegação real começa em `/login`). Corrigir em sprint de polimento futuro com simples redirect para `/login`.

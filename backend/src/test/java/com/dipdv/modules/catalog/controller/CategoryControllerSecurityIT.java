@@ -42,7 +42,7 @@ class CategoryControllerSecurityIT extends PostgresIntegrationSupport {
 
     @Test
     void createCategory_WithoutToken_ShouldReturn401() throws Exception {
-        CategoryRequest request = new CategoryRequest("Bebidas Seguranca", 1, true);
+        CategoryRequest request = new CategoryRequest("Bebidas Seguranca", "cup");
 
         mockMvc.perform(post("/api/v1/categories")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -54,7 +54,7 @@ class CategoryControllerSecurityIT extends PostgresIntegrationSupport {
     void createCategory_WithCashierToken_ShouldReturn403() throws Exception {
         // Gera um token validado localmente porém simulando um Caixa tentando criar uma categoria
         String cashierToken = jwtService.generateToken(UUID.randomUUID(), TENANT_ID, "CASHIER");
-        CategoryRequest request = new CategoryRequest("Bebidas Seguranca", 1, true);
+        CategoryRequest request = new CategoryRequest("Bebidas Seguranca", "cup");
 
         mockMvc.perform(post("/api/v1/categories")
                         .header("Authorization", "Bearer " + cashierToken)
@@ -67,7 +67,7 @@ class CategoryControllerSecurityIT extends PostgresIntegrationSupport {
     void createCategory_WithAdminToken_ShouldReturn201() throws Exception {
         // Gera um token verdadeiro para um ADMIN
         String adminToken = jwtService.generateToken(UUID.randomUUID(), TENANT_ID, "ADMIN");
-        CategoryRequest request = new CategoryRequest("Doces Seguranca", 10, true);
+        CategoryRequest request = new CategoryRequest("Doces Seguranca", "cake");
 
         mockMvc.perform(post("/api/v1/categories")
                         .header("Authorization", "Bearer " + adminToken)

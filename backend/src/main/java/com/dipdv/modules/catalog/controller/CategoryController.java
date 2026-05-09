@@ -26,10 +26,11 @@ public class CategoryController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER', 'SUPER_ADMIN')")
-    @Operation(summary = "Listar categorias (paginado)")
+    @Operation(summary = "Listar categorias (paginado). Use ?includeDeleted=true para incluir deletadas.")
     public Page<CategoryResponse> listCategories(
-            @PageableDefault(size = 20, sort = {"position", "name"}) Pageable pageable) {
-        return catalogService.listCategories(pageable);
+            @PageableDefault(size = 20, sort = {"position", "name"}) Pageable pageable,
+            @RequestParam(defaultValue = "false") boolean includeDeleted) {
+        return catalogService.listCategories(pageable, includeDeleted);
     }
 
     @GetMapping("/{id}")
@@ -57,8 +58,8 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    @Operation(summary = "Inativar categoria")
-    public void deactivateCategory(@PathVariable UUID id) {
-        catalogService.deactivateCategory(id);
+    @Operation(summary = "Deletar categoria (soft delete)")
+    public void deleteCategory(@PathVariable UUID id) {
+        catalogService.deleteCategory(id);
     }
 }

@@ -45,12 +45,13 @@ public class Product {
     @Column(name = "stock_min_level", nullable = false)
     private Integer stockMinLevel = 0;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
-
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    @Deprecated(forRemoval = true, since = "soft delete via deletedAt")
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -59,4 +60,8 @@ public class Product {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
 }

@@ -28,13 +28,25 @@ public class Category {
     private String name;
 
     @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
+    @Column(nullable = false, length = 50)
+    private String icon = "package";
+
+    @Builder.Default
+    @Column(name = "is_default", nullable = false)
+    private Boolean isDefault = false;
 
     @Builder.Default
     @org.hibernate.annotations.JdbcTypeCode(java.sql.Types.SMALLINT)
     @Column(columnDefinition = "SMALLINT DEFAULT 0")
     private Integer position = 0;
+
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    @Deprecated(forRemoval = true, since = "soft delete via deletedAt")
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -43,4 +55,8 @@ public class Category {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
 }
