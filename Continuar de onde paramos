@@ -1,0 +1,54 @@
+Fase 0 — Investigação Concluída
+
+  1. Estado atual de products e categories
+
+  ✅ Tabelas existem em V1__initial_schema.sql
+  
+  categories (linhas 105-115):
+  - Colunas atuais: id, tenant_id, name, active, position, created_at, updated_at
+  - FALTAM: icon VARCHAR(50) e is_default BOOLEAN (conforme spec)
+
+  products (linhas 124-139):
+  - ✓ Já possui category_id UUID (FOREIGN KEY → categories)
+  - ✓ Soft delete via deleted_at
+  - ✓ Constraints: UNIQUE (tenant_id, name) e price >= 0
+  - Entity Java mapeia corretamente
+
+  ---
+  2. Constantes de Tenant
+
+  ✅ Localizado: com.dipdv.shared.security.MasterTenantConstants
+  MASTER_TENANT_ID = "ffffffff-ffff-ffff-ffff-ffffffffffff"
+  MASTER_TENANT_ID_STR = "ffffffff-ffff-ffff-ffff-ffffffffffff"
+  
+  ---
+  3. Padrão de testes IT
+
+  ✅ Referência existente: CatalogControllerIT.java
+  - Herda de ControllerIntegrationSupport
+  - Usa @IntegrationTest
+  - Autenticação: tokenFor("ROLE")
+  - Validações: status HTTP + jsonPath() assertions
+  - Estrutura é pronta para adicionar novos testes
+
+  ---
+  4. Estratégia de Backfill
+  
+  - products não tem dados até agora (tabela vazia no schema, não há DataInitializer com seeds)
+  - Backfill em V12 deve:
+    a. Inserir categoria "Diversos" (is_default=true) para todos tenants existentes
+    b. Auto-criar "Diversos" no TenantAdminService.createTenant() para novos tenants
+
+  ---
+  5. Próxima Migration: V11 (não V12 — V10 é create_modules)
+
+  V11__add_catalog_fields.sql
+  - ALTER TABLE categories ADD icon, is_default
+  - ALTER TABLE categories ADD CONSTRAINT para garantir UQ (tenant_id, name)
+  - Backfill "Diversos" para tenants + produtos
+
+  ---
+  Pronto para Fase 1 — Implementação? Confirme se devo prosseguir com:
+  - Migration V11
+  - DTOs, Services, Controllers
+  - Testes IT (~16 novos)

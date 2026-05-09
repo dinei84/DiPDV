@@ -36,6 +36,9 @@ class SuperAdminRlsTest extends PostgresIntegrationSupport {
         rlsHelper.runAsSuperAdmin(() -> {
             jdbc.execute("DELETE FROM categories WHERE tenant_id = " +
                 "'cccccccc-0000-0000-0000-000000000003'");
+            // Also clean master tenant categories (auto-provisioned by TenantAdminService)
+            jdbc.execute("DELETE FROM categories WHERE tenant_id = " +
+                "'ffffffff-ffff-ffff-ffff-ffffffffffff'");
         });
 
         jdbc.update(

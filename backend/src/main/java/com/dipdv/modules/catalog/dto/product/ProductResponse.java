@@ -12,6 +12,8 @@ public record ProductResponse(
         String name,
         String description,
         BigDecimal price,
+        Integer stockQuantity,
+        Integer stockMinLevel,
         OffsetDateTime deletedAt,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt

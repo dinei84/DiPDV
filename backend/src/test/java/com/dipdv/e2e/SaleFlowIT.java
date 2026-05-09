@@ -102,7 +102,7 @@ class SaleFlowIT extends PostgresIntegrationSupport {
         MvcResult catResult = mockMvc.perform(post("/api/v1/categories")
                 .header("Authorization", adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\": \"Lanches E2E\", \"position\": 1}"))
+                .content("{\"name\": \"Lanches E2E\", \"icon\": \"hamburger\"}"))
             .andExpect(status().isCreated())
             .andReturn();
 

@@ -132,7 +132,7 @@ class CatalogServiceTest {
     void createProduct_whenValidRequest_shouldReturnResponse() {
         // Arrange
         ProductRequest request = new ProductRequest(null, "X-Burguer", "Delicioso",
-                new BigDecimal("25.00"));
+                new BigDecimal("25.00"), 10, 2);
 
         when(productRepository.existsByTenantIdAndNameAndDeletedAtIsNull(TENANT_ID, "X-Burguer"))
                 .thenReturn(false);
@@ -160,7 +160,7 @@ class CatalogServiceTest {
     void createProduct_whenNameAlreadyExists_shouldThrowConflict() {
         // Arrange
         ProductRequest request = new ProductRequest(null, "X-Burguer", "Delicioso",
-                new BigDecimal("25.00"));
+                new BigDecimal("25.00"), 10, 2);
 
         when(productRepository.existsByTenantIdAndNameAndDeletedAtIsNull(TENANT_ID, "X-Burguer"))
                 .thenReturn(true);

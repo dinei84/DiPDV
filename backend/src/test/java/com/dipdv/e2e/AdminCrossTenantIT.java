@@ -62,12 +62,28 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
             DEV_TENANT_ID.toString(), "Lanchonete Dev", "dev-tenant");
 
         // Limpar dados criados por este teste (E2E) especificamente
-        // Primeiro deletar usuários vinculados aos tenants E2E
+        // ORDEM CRÍTICA: respeitar dependências FK
+        // 1. Deletar produtos (referem categories)
+        jdbc.update(
+            "DELETE FROM products WHERE tenant_id IN " +
+            "(SELECT id FROM tenants WHERE slug LIKE '%-e2e')");
+
+        // 2. Deletar categorias (auto-criadas pelo TenantAdminService)
+        jdbc.update(
+            "DELETE FROM categories WHERE tenant_id IN " +
+            "(SELECT id FROM tenants WHERE slug LIKE '%-e2e')");
+
+        // 3. Deletar usuários
         jdbc.update(
             "DELETE FROM users WHERE tenant_id IN " +
             "(SELECT id FROM tenants WHERE slug LIKE '%-e2e')");
 
-        // Depois deletar os tenants E2E
+        // 4. Deletar tenant_modules
+        jdbc.update(
+            "DELETE FROM tenant_modules WHERE tenant_id IN " +
+            "(SELECT id FROM tenants WHERE slug LIKE '%-e2e')");
+
+        // 5. Deletar tenants
         jdbc.update(
             "DELETE FROM tenants WHERE slug LIKE '%-e2e'");
     }

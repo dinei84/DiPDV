@@ -156,8 +156,8 @@ public class CatalogService {
                 .name(request.name())
                 .description(request.description())
                 .price(request.price())
-                .stockQuantity(0)
-                .stockMinLevel(0)
+                .stockQuantity(request.stockQuantity() != null ? request.stockQuantity() : 0)
+                .stockMinLevel(request.stockMinLevel() != null ? request.stockMinLevel() : 0)
                 .build();
 
         product = productRepository.save(product);
@@ -184,6 +184,12 @@ public class CatalogService {
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setCategoryId(request.categoryId());
+        if (request.stockQuantity() != null) {
+            product.setStockQuantity(request.stockQuantity());
+        }
+        if (request.stockMinLevel() != null) {
+            product.setStockMinLevel(request.stockMinLevel());
+        }
 
         product = productRepository.save(product);
         log.info("Produto atualizado: {} pelo tenant: {}", product.getId(), product.getTenantId());
@@ -260,6 +266,8 @@ public class CatalogService {
                 product.getName(),
                 product.getDescription(),
                 product.getPrice(),
+                product.getStockQuantity(),
+                product.getStockMinLevel(),
                 product.getDeletedAt(),
                 product.getCreatedAt(),
                 product.getUpdatedAt()
