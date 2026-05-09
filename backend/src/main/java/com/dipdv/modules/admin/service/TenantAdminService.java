@@ -29,6 +29,9 @@ public class TenantAdminService {
             "CATALOG_MANAGEMENT"
     );
 
+    private static final UUID DEFAULT_TENANT_ID =
+        UUID.fromString("00000000-0000-0000-0000-000000000001");
+
     private final TenantRepository tenantRepository;
     private final TenantContextService tenantContextService;
     private final ModuleService moduleService;
@@ -75,6 +78,15 @@ public class TenantAdminService {
     @Transactional
     public TenantResponse updateTenant(UUID tenantId, TenantRequest request) {
         applySuperAdminContext();
+
+        if (request.active() != null && request.active() == false) {
+            if (DEFAULT_TENANT_ID.equals(tenantId)) {
+                throw new BusinessException("Tenant default não pode ser desativado", HttpStatus.BAD_REQUEST);
+            }
+            if (MasterTenantConstants.isMasterTenant(tenantId)) {
+                throw new BusinessException("Tenant master de sistema não pode ser desativado", HttpStatus.BAD_REQUEST);
+            }
+        }
 
         Tenant tenant = findTenant(tenantId);
 

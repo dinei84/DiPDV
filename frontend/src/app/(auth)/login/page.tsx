@@ -5,6 +5,7 @@ import { saveAuth, type AuthData } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [form, setForm] = useState({ tenantId: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

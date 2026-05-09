@@ -6,8 +6,10 @@ import { TenantRequest, TenantResponse } from '@/lib/types';
 import { apiGet, apiPut, ApiError } from '@/lib/api';
 import { useToast } from '@/components/Toast/useToast';
 import { useTenantModules } from '@/lib/hooks';
+import { getProtectedTenantReason } from '@/lib/utils/tenantProtection';
 import TenantForm from '../_components/TenantForm';
 import ModulesList from '../_components/ModulesList';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function EditTenantPage() {
   const params = useParams();
@@ -19,6 +21,10 @@ export default function EditTenantPage() {
   const [tenantLoading, setTenantLoading] = useState(true);
   const [tenantError, setTenantError] = useState<string | null>(null);
   const [isSavingTenant, setIsSavingTenant] = useState(false);
+
+  // Active toggle state
+  const [isToggleModalOpen, setIsToggleModalOpen] = useState(false);
+  const [isTogglingActive, setIsTogglingActive] = useState(false);
 
   // Modules state
   const { modules, loading: modulesLoading, error: modulesError } =
@@ -93,6 +99,29 @@ export default function EditTenantPage() {
     }
   };
 
+  const handleToggleActive = async () => {
+    if (!tenant) return;
+    try {
+      setIsTogglingActive(true);
+      const newActiveState = !tenant.active;
+      const updated = await apiPut<TenantResponse>(
+        `/api/v1/admin/tenants/${tenantId}`,
+        { active: newActiveState }
+      );
+      setTenant(updated);
+      addToast('success', newActiveState ? 'Tenant reativado' : 'Tenant desativado');
+      setIsToggleModalOpen(false);
+    } catch (err) {
+      let message = 'Erro ao alternar tenant';
+      if (err instanceof ApiError) {
+        message = err.message;
+      }
+      addToast('error', message);
+    } finally {
+      setIsTogglingActive(false);
+    }
+  };
+
   const isLoading = tenantLoading || modulesLoading;
   const error = tenantError || modulesError;
 
@@ -156,9 +185,20 @@ export default function EditTenantPage() {
         {/* Tenant Data Section */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Dados do Tenant
-            </h2>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Dados do Tenant
+              </h2>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  tenant.active
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-200 text-gray-800'
+                }`}
+              >
+                {tenant.active ? 'Ativo' : 'Inativo'}
+              </span>
+            </div>
             <TenantForm
               initialData={{
                 name: tenant.name,
@@ -169,6 +209,24 @@ export default function EditTenantPage() {
               submitLabel="Salvar"
               isLoading={isSavingTenant}
             />
+            <div className="mt-4 border-t pt-4">
+              <button
+                onClick={() => setIsToggleModalOpen(true)}
+                disabled={
+                  isTogglingActive || getProtectedTenantReason(tenantId) !== null
+                }
+                title={getProtectedTenantReason(tenantId) || ''}
+                className={`w-full px-4 py-2 rounded font-medium transition-colors ${
+                  getProtectedTenantReason(tenantId)
+                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-50'
+                    : tenant.active
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {tenant.active ? 'Desativar tenant' : 'Reativar tenant'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -192,6 +250,23 @@ export default function EditTenantPage() {
           </div>
         </div>
       </div>
+
+      {tenant && (
+        <ConfirmModal
+          isOpen={isToggleModalOpen}
+          title={tenant.active ? 'Desativar tenant' : 'Reativar tenant'}
+          message={
+            tenant.active
+              ? `Tem certeza que deseja desativar o tenant '${tenant.name}'? Usuários deste tenant não conseguirão mais fazer login no PDV.`
+              : `Tem certeza que deseja reativar o tenant '${tenant.name}'? Usuários poderão fazer login novamente.`
+          }
+          confirmLabel={tenant.active ? 'Desativar' : 'Reativar'}
+          isDangerous={tenant.active}
+          isLoading={isTogglingActive}
+          onConfirm={handleToggleActive}
+          onCancel={() => setIsToggleModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

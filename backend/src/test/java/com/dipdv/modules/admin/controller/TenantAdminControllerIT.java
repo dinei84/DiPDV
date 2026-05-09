@@ -147,6 +147,54 @@ class TenantAdminControllerIT extends ControllerIntegrationSupport {
     }
 
     @Test
+    @DisplayName("SUPER_ADMIN não consegue desativar tenant default")
+    void updateTenant_whenDefaultTenantBeingDeactivated_returns400() throws Exception {
+        UUID defaultTenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        mockMvc.perform(put("/api/v1/admin/tenants/{tenantId}", defaultTenantId)
+                .header("Authorization", superAdminToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "active": false
+                    }
+                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Tenant default não pode ser desativado"));
+
+        Boolean isActive = jdbcTemplate.queryForObject(
+                "SELECT active FROM tenants WHERE id = ?::uuid",
+                Boolean.class,
+                defaultTenantId.toString()
+        );
+        assertThat(isActive).isTrue();
+    }
+
+    @Test
+    @DisplayName("SUPER_ADMIN não consegue desativar tenant master")
+    void updateTenant_whenMasterTenantBeingDeactivated_returns400() throws Exception {
+        UUID masterTenantId = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff");
+
+        mockMvc.perform(put("/api/v1/admin/tenants/{tenantId}", masterTenantId)
+                .header("Authorization", superAdminToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "active": false
+                    }
+                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Tenant master de sistema não pode ser desativado"));
+
+        Boolean isActive = jdbcTemplate.queryForObject(
+                "SELECT active FROM tenants WHERE id = ?::uuid",
+                Boolean.class,
+                masterTenantId.toString()
+        );
+        assertThat(isActive).isTrue();
+    }
+
+    @Test
     @DisplayName("SUPER_ADMIN busca tenant inexistente")
     void superAdminShouldReturn404ForMissingTenant() throws Exception {
         mockMvc.perform(get("/api/v1/admin/tenants/{tenantId}",

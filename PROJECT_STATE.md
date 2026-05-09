@@ -50,6 +50,12 @@
 - Bug do toggle de módulos resolvido (apiFetch resiliente a 204 No Content) ✅
 - **Dívida técnica:** Campo `active` ausente no `TenantForm.tsx` — soft delete via UI não disponível (necessário adicionar em sprint própria).
 
+### Sprint 3a - Débitos reportados
+- **`frontend/src/app/page.tsx`** — Raiz do PDV ainda com template default do Next.js. Causa: não foi consertado durante sprints anteriores. Acessar `localhost:3000/` mostra "To get started, edit the page.tsx" em vez de redirecionar para login. Impacto baixo (navegação real começa em `/login`). Corrigir em sprint de polimento futuro com simples redirect para `/login`.
++ ✅ Resolvido em 08/05/2026: redirect simples para /login
+
+- **PDV — cor de texto em inputs quase invisível.** Inputs nas telas autenticadas do PDV têm contraste muito baixo entre texto digitado e fundo. Validação visual reportada pelo usuário. Corrigir em sprint de polimento visual futura.
+
 ## Decisões arquiteturais registradas
 
 - ADR-001: Monolito modular (não microsserviços)

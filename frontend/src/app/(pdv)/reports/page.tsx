@@ -1,8 +1,11 @@
 'use client';
+
 import { useState } from 'react';
 import ReportFilters from '@/components/reports/ReportFilters';
 import TopProductsTable from '@/components/reports/TopProductsTable';
 import { apiFetch } from '@/lib/api';
+import ModuleGate from '@/components/ModuleGate';
+import ModuleNotAvailable from '@/components/ModuleNotAvailable';
 
 interface TopProduct {
   productName: string;
@@ -54,30 +57,32 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-sm">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-blue-900">Relatórios</h1>
-        <button
-          onClick={downloadPdf}
-          className="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-800 transition"
-        >
-          Exportar PDF
-        </button>
+    <ModuleGate module="REPORTS" fallback={<ModuleNotAvailable />}>
+      <div className="p-6 bg-white rounded-xl shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-bold text-blue-900">Relatórios</h1>
+          <button
+            onClick={downloadPdf}
+            className="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-800 transition"
+          >
+            Exportar PDF
+          </button>
+        </div>
+
+        <ReportFilters
+          from={from}
+          to={to}
+          onFromChange={setFrom}
+          onToChange={setTo}
+          onApply={loadReports}
+        />
+
+        {loading ? (
+          <p className="text-gray-400 text-sm mt-4">Carregando...</p>
+        ) : (
+          <TopProductsTable data={topProducts} />
+        )}
       </div>
-
-      <ReportFilters
-        from={from}
-        to={to}
-        onFromChange={setFrom}
-        onToChange={setTo}
-        onApply={loadReports}
-      />
-
-      {loading ? (
-        <p className="text-gray-400 text-sm mt-4">Carregando...</p>
-      ) : (
-        <TopProductsTable data={topProducts} />
-      )}
-    </div>
+    </ModuleGate>
   );
 }

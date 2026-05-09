@@ -1,5 +1,15 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
+async function safeParseJson(response: Response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit
@@ -17,9 +27,11 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error((error as { message?: string }).message ?? `HTTP ${res.status}`);
+    const error = await safeParseJson(res);
+    throw new Error(
+      (error as { message?: string })?.message ?? `HTTP ${res.status}`
+    );
   }
 
-  return res.json();
+  return safeParseJson(res);
 }
