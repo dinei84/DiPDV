@@ -65,6 +65,13 @@ public class ProductController {
         catalogService.deleteProduct(id);
     }
 
+    @PatchMapping("/{id}/reactivate")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @Operation(summary = "Reativar produto deletado")
+    public ProductResponse reactivateProduct(@PathVariable UUID id) {
+        return catalogService.reactivateProduct(id);
+    }
+
     @GetMapping("/low-stock")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPER_ADMIN')")
     @Operation(summary = "Produtos com estoque baixo")

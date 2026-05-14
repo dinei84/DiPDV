@@ -230,6 +230,26 @@ public class CatalogService {
         log.info("Produto deletado (soft delete): {} pelo tenant: {}", id, product.getTenantId());
     }
 
+    @Transactional
+    public ProductResponse reactivateProduct(UUID id) {
+        UUID tenantId = TenantContext.getRequired();
+        Product product = productRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new BusinessException("Produto não encontrado", HttpStatus.NOT_FOUND));
+
+        if (product.getDeletedAt() == null) {
+            return toProductResponse(product);
+        }
+
+        if (productRepository.existsByTenantIdAndNameAndDeletedAtIsNull(tenantId, product.getName())) {
+            throw new BusinessException("Já existe um produto ativo com este nome. Renomeie o produto existente antes de reativar.", HttpStatus.CONFLICT);
+        }
+
+        product.setDeletedAt(null);
+        product = productRepository.save(product);
+        log.info("Produto reativado: {} pelo tenant: {}", id, tenantId);
+        return toProductResponse(product);
+    }
+
     @Transactional(readOnly = true)
     public List<ProductResponse> getLowStockProducts() {
         UUID tenantId = TenantContext.getRequired();
