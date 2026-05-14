@@ -350,7 +350,7 @@ class CatalogControllerIT extends PostgresIntegrationSupport {
         mockMvc.perform(get("/api/v1/products")
                 .header("Authorization", adminToken))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content[?(@.id == '" + productId + "')].deletedAt").isEmpty());
+            .andExpect(jsonPath("$.content[?(@.id == '" + productId + "')].name").value("Prod To Reactivate"));
     }
 
     @Test
