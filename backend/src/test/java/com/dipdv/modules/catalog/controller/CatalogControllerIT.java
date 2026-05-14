@@ -266,16 +266,68 @@ class CatalogControllerIT extends PostgresIntegrationSupport {
         mockMvc.perform(post("/api/v1/categories")
                 .header("Authorization", adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\": \"Unique Cat\", \"icon\": \"box\"}"))
+                .content("{\"name\": \"Unique Cat\", \"icon\": \"box\", \"position\": 0}"))
             .andExpect(status().isCreated());
 
         // Try to create second with same name
         mockMvc.perform(post("/api/v1/categories")
                 .header("Authorization", adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\": \"Unique Cat\", \"icon\": \"trash\"}"))
+                .content("{\"name\": \"Unique Cat\", \"icon\": \"trash\", \"position\": 1}"))
             .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.message").value("Já existe uma categoria com este nome"));
+            .andExpect(jsonPath("$.message").value("Já existe uma categoria ativa com este nome"));
+    }
+
+    @Test
+    @DisplayName("PATCH /categories/{id}/reactivate should handle conflict")
+    void reactivateCategory_withConflict_shouldReturn409() throws Exception {
+        // 1. Create category "X"
+        MvcResult res1 = mockMvc.perform(post("/api/v1/categories")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"X\", \"icon\": \"box\"}"))
+            .andExpect(status().isCreated())
+            .andReturn();
+        String idX = id(res1);
+
+        // 2. Delete "X"
+        mockMvc.perform(delete("/api/v1/categories/" + idX).header("Authorization", adminToken))
+            .andExpect(status().isNoContent());
+
+        // 3. Create another "X" (Now allowed because first one is deleted)
+        mockMvc.perform(post("/api/v1/categories")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"X\", \"icon\": \"trash\"}"))
+            .andExpect(status().isCreated());
+
+        // 4. Try to reactivate the first "X" -> Conflict 409
+        mockMvc.perform(patch("/api/v1/categories/" + idX + "/reactivate")
+                .header("Authorization", adminToken))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.message")
+                .value("Já existe uma categoria ativa com este nome. Renomeie a categoria existente antes de reativar."));
+    }
+
+    @Test
+    @DisplayName("GET /categories should return sorted by position and name")
+    void listCategories_shouldBeSorted() throws Exception {
+        // Clean up before test
+        jdbc.update("DELETE FROM categories WHERE tenant_id = ?::uuid", TENANT_ID.toString());
+        
+        // Add specific ones (including a manual Diversos for test consistency)
+        mockMvc.perform(post("/api/v1/categories").header("Authorization", adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"name\": \"Diversos\", \"position\": 0}"));
+        mockMvc.perform(post("/api/v1/categories").header("Authorization", adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"name\": \"B\", \"position\": 2}"));
+        mockMvc.perform(post("/api/v1/categories").header("Authorization", adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"name\": \"A\", \"position\": 2}"));
+        mockMvc.perform(post("/api/v1/categories").header("Authorization", adminToken).contentType(MediaType.APPLICATION_JSON).content("{\"name\": \"C\", \"position\": 1}"));
+
+        mockMvc.perform(get("/api/v1/categories")
+                .header("Authorization", adminToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].name").value("Diversos")) // position 0
+            .andExpect(jsonPath("$.content[1].name").value("C")) // position 1
+            .andExpect(jsonPath("$.content[2].name").value("A")) // position 2, name A
+            .andExpect(jsonPath("$.content[3].name").value("B")); // position 2, name B
     }
 
     // ─────────────────────────────────────────────────────────────────────────

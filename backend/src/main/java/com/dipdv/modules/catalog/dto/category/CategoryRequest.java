@@ -9,11 +9,16 @@ public record CategoryRequest(
         String name,
 
         @Size(max = 50, message = "O ícone não pode exceder 50 caracteres")
-        String icon
+        String icon,
+
+        Integer position
 ) {
     public CategoryRequest {
         if (icon == null || icon.isBlank()) {
             icon = "package";
+        }
+        if (position == null) {
+            position = 0;
         }
     }
 }

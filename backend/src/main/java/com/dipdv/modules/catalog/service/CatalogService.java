@@ -39,8 +39,8 @@ public class CatalogService {
     public Page<CategoryResponse> listCategories(Pageable pageable, boolean includeDeleted) {
         UUID tenantId = TenantContext.getRequired();
         Page<Category> page = includeDeleted
-                ? categoryRepository.findByTenantIdOrderByPositionAsc(tenantId, pageable)
-                : categoryRepository.findByTenantIdAndDeletedAtIsNullOrderByPositionAsc(tenantId, pageable);
+                ? categoryRepository.findByTenantId(tenantId, pageable)
+                : categoryRepository.findByTenantIdAndDeletedAtIsNull(tenantId, pageable);
         return page.map(this::toCategoryResponse);
     }
 
@@ -53,9 +53,9 @@ public class CatalogService {
     public CategoryResponse createCategory(CategoryRequest request) {
         UUID tenantId = TenantContext.getRequired();
 
-        // Validação: duplicidade de nome (não deletadas)
+        // Validação: duplicidade de nome (apenas entre categorias ativas)
         if (categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(tenantId, request.name())) {
-            throw new BusinessException("Já existe uma categoria com este nome", HttpStatus.CONFLICT);
+            throw new BusinessException("Já existe uma categoria ativa com este nome", HttpStatus.CONFLICT);
         }
 
         Category category = Category.builder()
@@ -63,7 +63,7 @@ public class CatalogService {
                 .name(request.name())
                 .icon(request.icon())
                 .isDefault(false)
-                .position(0)
+                .position(request.position())
                 .build();
 
         category = categoryRepository.save(category);
@@ -78,11 +78,12 @@ public class CatalogService {
 
         if (!category.getName().equalsIgnoreCase(request.name()) &&
                 categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(category.getTenantId(), request.name())) {
-            throw new BusinessException("Já existe uma categoria com este nome", HttpStatus.CONFLICT);
+            throw new BusinessException("Já existe uma categoria ativa com este nome", HttpStatus.CONFLICT);
         }
 
         category.setName(request.name());
         category.setIcon(request.icon());
+        category.setPosition(request.position());
 
         category = categoryRepository.save(category);
         log.info("Categoria atualizada: {} pelo tenant: {}", category.getId(), category.getTenantId());
@@ -108,6 +109,30 @@ public class CatalogService {
         category.setDeletedAt(OffsetDateTime.now());
         categoryRepository.save(category);
         log.info("Categoria deletada (soft delete): {} pelo tenant: {}", id, category.getTenantId());
+    }
+
+    @Transactional
+    public CategoryResponse reactivateCategory(UUID id) {
+        UUID tenantId = TenantContext.getRequired();
+        Category category = categoryRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new BusinessException("Categoria não encontrada", HttpStatus.NOT_FOUND));
+
+        if (category.getDeletedAt() == null) {
+            return toCategoryResponse(category);
+        }
+
+        // Se o constraint fosse parcial (só ativos), checaríamos se já existe uma ativa com mesmo nome
+        // Como o constraint é absoluto no DB atual, se chegamos aqui com uma deletada,
+        // tecnicamente não deveria existir outra com mesmo nome.
+        // Mas vamos seguir a spec de retornar 409 se houver conflito.
+        if (categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(tenantId, category.getName())) {
+            throw new BusinessException("Já existe uma categoria ativa com este nome. Renomeie a categoria existente antes de reativar.", HttpStatus.CONFLICT);
+        }
+
+        category.setDeletedAt(null);
+        category = categoryRepository.save(category);
+        log.info("Categoria reativada: {} pelo tenant: {}", id, tenantId);
+        return toCategoryResponse(category);
     }
 
     // ============================================

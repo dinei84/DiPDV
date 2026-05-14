@@ -13,10 +13,10 @@ import java.util.UUID;
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     // Listar categorias não deletadas do tenant com paginação
-    Page<Category> findByTenantIdAndDeletedAtIsNullOrderByPositionAsc(UUID tenantId, Pageable pageable);
+    Page<Category> findByTenantIdAndDeletedAtIsNull(UUID tenantId, Pageable pageable);
 
     // Listar categorias incluindo deletadas
-    Page<Category> findByTenantIdOrderByPositionAsc(UUID tenantId, Pageable pageable);
+    Page<Category> findByTenantId(UUID tenantId, Pageable pageable);
 
     // Verificar duplicidade de nome no tenant (não deletadas)
     boolean existsByTenantIdAndNameAndDeletedAtIsNull(UUID tenantId, String name);

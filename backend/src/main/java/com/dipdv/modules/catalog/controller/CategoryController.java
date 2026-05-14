@@ -62,4 +62,11 @@ public class CategoryController {
     public void deleteCategory(@PathVariable UUID id) {
         catalogService.deleteCategory(id);
     }
+
+    @PatchMapping("/{id}/reactivate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Operation(summary = "Reativar categoria deletada")
+    public CategoryResponse reactivateCategory(@PathVariable UUID id) {
+        return catalogService.reactivateCategory(id);
+    }
 }
