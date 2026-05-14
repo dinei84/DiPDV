@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuth } from '@/lib/auth';
 import { apiGet, apiPost, apiPut, apiDelete, apiPatch } from '@/lib/api';
-import { Category, CategoryDTO } from '@/lib/types';
+import { Category, CategoryDTO, Page } from '@/lib/types';
 import { toast } from '@/lib/toast';
 import { useConfirm } from '@/lib/confirm';
 import { 
@@ -58,8 +58,8 @@ export default function CategoriesPage() {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const data = await apiGet<Category[]>(`/api/v1/categories${showDeleted ? '?includeDeleted=true' : ''}`);
-      setCategories(data);
+      const data = await apiGet<Page<Category>>(`/api/v1/categories${showDeleted ? '?includeDeleted=true' : ''}`);
+      setCategories(data.content ?? []);
     } catch (error) {
       console.error(error);
     } finally {
@@ -80,7 +80,7 @@ export default function CategoriesPage() {
       setFormData({
         name: '',
         icon: 'package',
-        position: categories.length,
+        position: Array.isArray(categories) ? categories.length : 0,
       });
     }
     setIsDrawerOpen(true);
@@ -112,15 +112,14 @@ export default function CategoriesPage() {
     if (!editingCategory) return;
     
     const ok = await confirm({
-      title: 'Excluir categoria',
-      message: `Tem certeza que deseja excluir a categoria "${editingCategory.name}"?`,
-      danger: true,
+      title: 'Desativar categoria',
+      message: `Deseja desativar a categoria "${editingCategory.name}"? Ela ficará oculta da listagem mas pode ser reativada depois pelo toggle 'Ver inativos'.`,
     });
 
     if (ok) {
       try {
         await apiDelete(`/api/v1/categories/${editingCategory.id}`);
-        toast.success('Categoria excluída com sucesso');
+        toast.success('Categoria desativada com sucesso');
         handleCloseDrawer();
         loadCategories();
       } catch (error) {
@@ -142,7 +141,7 @@ export default function CategoriesPage() {
     }
   };
 
-  const isDiversos = editingCategory?.name.toLowerCase() === 'diversos';
+  const isDiversos = editingCategory?.isDefault || editingCategory?.name.toLowerCase() === 'diversos';
 
   return (
     <div className="max-w-6xl mx-auto py-6">
@@ -176,7 +175,7 @@ export default function CategoriesPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         {loading && categories.length === 0 ? (
           <div className="p-12 text-center text-gray-500">Carregando categorias...</div>
-        ) : categories.length === 0 ? (
+        ) : !Array.isArray(categories) || categories.length === 0 ? (
           <div className="p-12 text-center text-gray-500">Nenhuma categoria encontrada.</div>
         ) : (
           <table className="w-full text-left border-collapse">
@@ -323,15 +322,15 @@ export default function CategoriesPage() {
                       disabled={isDiversos}
                       onClick={handleDelete}
                       className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                      title={isDiversos ? 'A categoria "Diversos" não pode ser excluída' : ''}
+                      title={isDiversos ? 'A categoria "Diversos" não pode ser desativada' : ''}
                     >
                       <Trash2 className="w-4 h-4" />
-                      Excluir Categoria
+                      Desativar Categoria
                     </button>
                   )}
                   {isDiversos && !editingCategory.deletedAt && (
                     <p className="text-xs text-center text-gray-500">
-                      A categoria "Diversos" é padrão do sistema e não pode ser excluída.
+                      A categoria "Diversos" é padrão do sistema e não pode ser desativada.
                     </p>
                   )}
                 </div>
