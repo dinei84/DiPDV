@@ -63,7 +63,13 @@ export default function PdvLayout({
                           >
                             Categorias
                           </Link>
-                          {/* TODO: prompt 2 - Produtos */}
+                          <Link
+                            href="/manage/products"
+                            className="px-4 py-2 hover:bg-gray-100 transition"
+                            onClick={() => setGestaoOpen(false)}
+                          >
+                            Produtos
+                          </Link>
                         </div>
                       )}
                     </div>
