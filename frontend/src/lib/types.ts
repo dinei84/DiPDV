@@ -16,6 +16,28 @@ export interface CategoryDTO {
   position: number;
 }
 
+export interface Product {
+  id: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  categoryIcon: string | null;
+  name: string;
+  description: string | null;
+  price: number;
+  stockQuantity: number;
+  stockMinLevel: number;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductDTO {
+  categoryId?: string | null;
+  name: string;
+  description?: string | null;
+  price: number;
+}
+
 export type Page<T> = {
   content: T[];
   totalPages: number;

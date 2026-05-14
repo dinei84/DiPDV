@@ -310,6 +310,91 @@ class CatalogControllerIT extends PostgresIntegrationSupport {
     }
 
     @Test
+    @DisplayName("PATCH /products/{id}/reactivate should reactivate successfully")
+    void reactivateProduct_success() throws Exception {
+        // 1. Create product
+        MvcResult prodResult = mockMvc.perform(post("/api/v1/products")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "name": "Prod To Reactivate",
+                      "price": 10.00
+                    }
+                    """))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+        String productId = id(prodResult);
+
+        // 2. Delete it
+        mockMvc.perform(delete("/api/v1/products/" + productId)
+                .header("Authorization", adminToken))
+            .andExpect(status().isNoContent());
+
+        // 3. Verify it's gone from active list
+        mockMvc.perform(get("/api/v1/products")
+                .header("Authorization", adminToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[?(@.id == '" + productId + "')]").doesNotExist());
+
+        // 4. Reactivate it
+        mockMvc.perform(patch("/api/v1/products/" + productId + "/reactivate")
+                .header("Authorization", adminToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(productId))
+            .andExpect(jsonPath("$.name").value("Prod To Reactivate"))
+            .andExpect(jsonPath("$.deletedAt").isEmpty());
+
+        // 5. Verify it's back in active list
+        mockMvc.perform(get("/api/v1/products")
+                .header("Authorization", adminToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[?(@.id == '" + productId + "')].name").value("Prod To Reactivate"));
+    }
+
+    @Test
+    @DisplayName("PATCH /products/{id}/reactivate should handle conflict")
+    void reactivateProduct_withConflict_shouldReturn409() throws Exception {
+        // 1. Create product "Y"
+        MvcResult res1 = mockMvc.perform(post("/api/v1/products")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "name": "Y",
+                      "price": 10.00
+                    }
+                    """))
+            .andExpect(status().isCreated())
+            .andReturn();
+        String idY = id(res1);
+
+        // 2. Delete "Y"
+        mockMvc.perform(delete("/api/v1/products/" + idY).header("Authorization", adminToken))
+            .andExpect(status().isNoContent());
+
+        // 3. Create another "Y" (Now allowed because first one is deleted)
+        mockMvc.perform(post("/api/v1/products")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "name": "Y",
+                      "price": 20.00
+                    }
+                    """))
+            .andExpect(status().isCreated());
+
+        // 4. Try to reactivate the first "Y" -> Conflict 409
+        mockMvc.perform(patch("/api/v1/products/" + idY + "/reactivate")
+                .header("Authorization", adminToken))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.message")
+                .value("Já existe um produto ativo com este nome. Renomeie o produto existente antes de reativar."));
+    }
+
+    @Test
     @DisplayName("GET /categories should return sorted by position and name")
     void listCategories_shouldBeSorted() throws Exception {
         // Clean up before test

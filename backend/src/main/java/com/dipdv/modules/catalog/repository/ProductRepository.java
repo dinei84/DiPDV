@@ -31,6 +31,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     // Buscar por id (não deletado)
     Optional<Product> findByIdAndTenantIdAndDeletedAtIsNull(UUID id, UUID tenantId);
 
+    // Buscar por id (inclusive deletado)
+    Optional<Product> findByIdAndTenantId(UUID id, UUID tenantId);
+
     // Contar produtos vinculados a uma categoria (não deletados)
     long countByTenantIdAndCategoryIdAndDeletedAtIsNull(UUID tenantId, UUID categoryId);
 
