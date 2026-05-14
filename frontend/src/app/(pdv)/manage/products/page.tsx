@@ -73,7 +73,7 @@ export default function ProductsPage() {
         categoryId: product.categoryId,
         name: product.name,
         description: product.description,
-        price: product.price,
+        price: product.price * 100,
       });
     } else {
       setEditingProduct(null);
@@ -97,7 +97,7 @@ export default function ProductsPage() {
     try {
       const payload = {
         ...formData,
-        price: formData.price / 100, // Convert cents to dollars
+        price: (formData.price / 100).toFixed(2),
       };
       if (editingProduct) {
         await apiPut(`/api/v1/products/${editingProduct.id}`, payload);
@@ -230,7 +230,9 @@ export default function ProductsPage() {
                       <div className="font-medium text-gray-900">{product.name}</div>
                     </td>
                     <td className="px-6 py-4 text-gray-500">{categoryName}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">R$ {(product.price / 100).toFixed(2).replace('.', ',')}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+                    </td>
                     <td className="px-6 py-4">
                       {isDeleted ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
