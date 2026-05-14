@@ -63,7 +63,7 @@ class CatalogServiceTest {
     @Test
     void createCategory_whenValidRequest_shouldReturnResponse() {
         // Arrange
-        CategoryRequest request = new CategoryRequest("Lanches", "hamburger");
+        CategoryRequest request = new CategoryRequest("Lanches", "hamburger", 5);
 
         when(categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(TENANT_ID, "Lanches"))
                 .thenReturn(false);
@@ -85,6 +85,7 @@ class CatalogServiceTest {
         assertNotNull(response.id());
         assertEquals("Lanches", response.name());
         assertEquals("hamburger", response.icon());
+        assertEquals(5, response.position());
         assertFalse(response.isDefault());
         assertNull(response.deletedAt());
 
@@ -95,7 +96,7 @@ class CatalogServiceTest {
     @Test
     void createCategory_whenNameAlreadyExists_shouldThrowConflict() {
         // Arrange
-        CategoryRequest request = new CategoryRequest("Lanches", "hamburger");
+        CategoryRequest request = new CategoryRequest("Lanches", "hamburger", 0);
 
         when(categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(TENANT_ID, "Lanches"))
                 .thenReturn(true);
@@ -104,10 +105,93 @@ class CatalogServiceTest {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> catalogService.createCategory(request));
 
-        assertEquals("Já existe uma categoria com este nome", exception.getMessage());
+        assertEquals("Já existe uma categoria ativa com este nome", exception.getMessage());
         assertEquals(HttpStatus.CONFLICT, exception.getStatus());
 
         verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_whenValidRequest_shouldUpdatePosition() {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        Category category = Category.builder()
+                .id(id)
+                .tenantId(TENANT_ID)
+                .name("Antigo")
+                .position(1)
+                .build();
+
+        CategoryRequest request = new CategoryRequest("Novo", "star", 10);
+
+        when(categoryRepository.findByIdAndTenantIdAndDeletedAtIsNull(id, TENANT_ID))
+                .thenReturn(Optional.of(category));
+        
+        when(categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(TENANT_ID, "Novo")).thenReturn(false);
+
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
+
+        // Act
+        CategoryResponse response = catalogService.updateCategory(id, request);
+
+        // Assert
+        assertEquals("Novo", category.getName());
+        assertEquals(10, category.getPosition());
+        verify(categoryRepository).save(category);
+    }
+
+    @Test
+    void reactivateCategory_whenNameConflict_shouldThrow409() {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        Category deletedCategory = Category.builder()
+                .id(id)
+                .tenantId(TENANT_ID)
+                .name("Bebidas")
+                .deletedAt(OffsetDateTime.now())
+                .build();
+
+        when(categoryRepository.findByIdAndTenantId(id, TENANT_ID))
+                .thenReturn(Optional.of(deletedCategory));
+
+        when(categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(TENANT_ID, "Bebidas"))
+                .thenReturn(true);
+
+        // Act & Assert
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> catalogService.reactivateCategory(id));
+
+        assertEquals("Já existe uma categoria ativa com este nome. Renomeie a categoria existente antes de reativar.", exception.getMessage());
+        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+
+        verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    void reactivateCategory_whenNoConflict_shouldSucceed() {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        Category deletedCategory = Category.builder()
+                .id(id)
+                .tenantId(TENANT_ID)
+                .name("Bebidas")
+                .deletedAt(OffsetDateTime.now())
+                .build();
+
+        when(categoryRepository.findByIdAndTenantId(id, TENANT_ID))
+                .thenReturn(Optional.of(deletedCategory));
+
+        when(categoryRepository.existsByTenantIdAndNameAndDeletedAtIsNull(TENANT_ID, "Bebidas"))
+                .thenReturn(false);
+
+        when(categoryRepository.save(any(Category.class))).thenReturn(deletedCategory);
+
+        // Act
+        CategoryResponse response = catalogService.reactivateCategory(id);
+
+        // Assert
+        assertNull(deletedCategory.getDeletedAt());
+        verify(categoryRepository).save(deletedCategory);
     }
 
     @Test

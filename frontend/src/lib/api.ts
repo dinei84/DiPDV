@@ -1,3 +1,7 @@
+import { clearAuth } from './auth';
+import { ApiError } from './api-error';
+import { toast } from './toast';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 async function safeParseJson(response: Response) {
@@ -26,12 +30,57 @@ export async function apiFetch<T>(
     },
   });
 
-  if (!res.ok) {
-    const error = await safeParseJson(res);
-    throw new Error(
-      (error as { message?: string })?.message ?? `HTTP ${res.status}`
-    );
+  if (res.status === 401) {
+    clearAuth();
+    toast.error('Sessão expirada. Faça login novamente.');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new ApiError(res.status, null, 'Unauthorized');
   }
 
-  return safeParseJson(res);
+  const body = await safeParseJson(res);
+
+  if (res.status === 403) {
+    const message = body?.message || body?.module || 'Acesso negado';
+    toast.error(message);
+    throw new ApiError(res.status, body, message);
+  }
+
+  if (!res.ok) {
+    const message = body?.message || `Erro ${res.status}`;
+    toast.error(message);
+    throw new ApiError(res.status, body, message);
+  }
+
+  return body as T;
+}
+
+export async function apiGet<T>(path: string): Promise<T> {
+  return apiFetch<T>(path, { method: 'GET' });
+}
+
+export async function apiPost<T>(path: string, data?: any): Promise<T> {
+  return apiFetch<T>(path, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiPut<T>(path: string, data?: any): Promise<T> {
+  return apiFetch<T>(path, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  return apiFetch<T>(path, { method: 'DELETE' });
+}
+
+export async function apiPatch<T>(path: string, data?: any): Promise<T> {
+  return apiFetch<T>(path, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
 }
