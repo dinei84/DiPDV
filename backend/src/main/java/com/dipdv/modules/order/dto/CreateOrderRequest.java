@@ -1,7 +1,8 @@
 package com.dipdv.modules.order.dto;
 
-import java.util.UUID;
+import jakarta.validation.constraints.Size;
 
 public record CreateOrderRequest(
-        UUID cashRegisterId   // opcional — nullable no MVP
+        @Size(max = 100)
+        String identifier
 ) {}

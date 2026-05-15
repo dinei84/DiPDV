@@ -3,6 +3,7 @@ package com.dipdv.shared.audit;
 public enum AuditAction {
     ORDER_CANCELED,
     ORDER_CLOSED,
+    ORDER_ITEM_QUANTITY_UPDATED,
     CASH_REGISTER_OPENED,
     CASH_REGISTER_CLOSED,
     STOCK_ADJUSTED,

@@ -5,6 +5,9 @@ import com.dipdv.modules.catalog.entity.ModifierOption;
 import com.dipdv.modules.catalog.entity.Product;
 import com.dipdv.modules.catalog.repository.ModifierGroupRepository;
 import com.dipdv.modules.catalog.repository.ProductRepository;
+import com.dipdv.modules.cashregister.entity.CashRegister;
+import com.dipdv.modules.cashregister.entity.enums.CashRegisterStatus;
+import com.dipdv.modules.cashregister.repository.CashRegisterRepository;
 import com.dipdv.modules.inventory.entity.StockMovement;
 import com.dipdv.modules.inventory.entity.enums.StockMovementType;
 import com.dipdv.modules.inventory.repository.StockMovementRepository;
@@ -15,6 +18,8 @@ import com.dipdv.modules.order.entity.OrderItemModifier;
 import com.dipdv.modules.order.entity.enums.OrderStatus;
 import com.dipdv.modules.order.repository.OrderItemRepository;
 import com.dipdv.modules.order.repository.OrderRepository;
+import com.dipdv.modules.payment.entity.enums.PaymentStatus;
+import com.dipdv.modules.payment.repository.PaymentRepository;
 import com.dipdv.shared.audit.AuditAction;
 import com.dipdv.shared.audit.Auditable;
 import com.dipdv.shared.exception.BusinessException;
@@ -23,6 +28,7 @@ import com.dipdv.shared.tenant.TenantContext;
 import com.dipdv.shared.tenant.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -47,6 +53,8 @@ public class OrderService {
     private final ModifierGroupRepository modifierGroupRepository;
     private final StockMovementRepository stockMovementRepository;
     private final TenantRepository tenantRepository;
+    private final CashRegisterRepository cashRegisterRepository;
+    private final PaymentRepository paymentRepository;
 
     // ── Pedido ─────────────────────────────────────────────────────────────────
 
@@ -55,16 +63,31 @@ public class OrderService {
         UUID tenantId = TenantContext.getRequired();
         UUID userId = extractUserId();
 
+        // Validar caixa aberto
+        CashRegister cashRegister = cashRegisterRepository.findByTenantIdAndStatus(tenantId, CashRegisterStatus.OPEN)
+                .orElseThrow(() -> new BusinessException("Não há caixa aberto para iniciar pedidos", HttpStatus.CONFLICT));
+
         Order order = Order.builder()
                 .tenantId(tenantId)
                 .userId(userId)
-                .cashRegisterId(request != null ? request.cashRegisterId() : null)
+                .identifier(request != null ? request.identifier() : null)
+                .cashRegisterId(cashRegister.getId())
                 .status(OrderStatus.OPEN)
                 .total(BigDecimal.ZERO)
                 .build();
 
-        order = orderRepository.save(order);
-        log.info("Pedido criado: {} pelo tenant: {}", order.getId(), tenantId);
+        try {
+            order = orderRepository.saveAndFlush(order);
+        } catch (DataIntegrityViolationException e) {
+            if (order.getIdentifier() != null) {
+                throw new BusinessException(
+                        "Já existe um pedido aberto com o identificador: " + order.getIdentifier(),
+                        HttpStatus.CONFLICT);
+            }
+            throw e;
+        }
+
+        log.info("Pedido criado: {} (id: {}) pelo tenant: {}", order.getIdentifier(), order.getId(), tenantId);
 
         return toOrderResponse(order, List.of());
     }
@@ -210,6 +233,66 @@ public class OrderService {
     }
 
     @Transactional
+    @Auditable(action = AuditAction.ORDER_ITEM_QUANTITY_UPDATED, entity = "order_items")
+    public OrderResponse updateItemQuantity(UUID orderId, UUID itemId, UpdateItemQuantityRequest request) {
+        UUID tenantId = TenantContext.getRequired();
+        Order order = findOrderOrThrow(orderId, tenantId);
+
+        if (order.getStatus() != OrderStatus.OPEN) {
+            throw new BusinessException(
+                    "Pedido não está aberto para edição (status: " + order.getStatus() + ")",
+                    HttpStatus.CONFLICT);
+        }
+
+        OrderItem item = orderItemRepository.findByIdAndOrderId(itemId, orderId)
+                .orElseThrow(() -> new BusinessException("Item não encontrado no pedido", HttpStatus.NOT_FOUND));
+
+        // Para os modificadores, o preço é fixo. A quantidade do item escala o preço base + modificadores.
+        // No AddItemRequest, o modifierTotal já considera a quantidade do modificador, mas o total do item é:
+        // (productPrice * quantity) + modifierTotal.
+        // Se mudarmos a quantidade do item, os modificadores continuam os mesmos?
+        // Geralmente sim, se eu tenho 2 Cocas com Gelo, e mudo para 3 Cocas, o Gelo escala com o item se for proporcional.
+        // MAS, a implementação atual do addItem calcula o modifierTotal INDEPENDENTE da quantidade do item:
+        /*
+        BigDecimal modifierTotal = request.modifiers().stream()
+                .map(sel -> {
+                    ModifierOption option = findOptionInGroups(sel.modifierOptionId(), productGroups);
+                    return option.getPriceAddition()
+                            .multiply(BigDecimal.valueOf(sel.quantity()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalPrice = product.getPrice()
+                .multiply(BigDecimal.valueOf(request.quantity()))
+                .add(modifierTotal);
+         */
+        // Então o modifierTotal é a soma das adições dos modificadores (que já têm sua própria quantidade).
+        // Se eu mudar a quantidade do item de 1 para 2, o preço do produto dobra, mas os modificadores (ex: Adicional de Bacon x1) continuam x1?
+        // Pelo modelo atual, parece que sim.
+
+        BigDecimal modifierTotal = item.getModifiers().stream()
+                .map(m -> m.getPriceAddition().multiply(BigDecimal.valueOf(m.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        item.setQuantity(request.quantity());
+        item.setTotalPrice(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())).add(modifierTotal));
+        orderItemRepository.save(item);
+
+        // Recalcular total do pedido
+        List<OrderItem> allItems = orderItemRepository.findByOrderIdWithModifiers(orderId);
+        BigDecimal newTotal = allItems.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        order.setTotal(newTotal);
+        orderRepository.save(order);
+
+        log.info("Quantidade do item {} no pedido {} atualizada para {}", itemId, orderId, request.quantity());
+
+        return toOrderResponse(order, allItems);
+    }
+
+    @Transactional
     @Auditable(action = AuditAction.ORDER_CANCELED, entity = "orders")
     public OrderResponse cancelOrder(UUID orderId, String reason) {
         UUID tenantId = TenantContext.getRequired();
@@ -223,6 +306,14 @@ public class OrderService {
 
         if (reason == null || reason.isBlank()) {
             throw new BusinessException("Motivo do cancelamento é obrigatório", HttpStatus.BAD_REQUEST);
+        }
+
+        // Cancel guard: não permite cancelar se houver pagamentos PAID
+        boolean hasPaidPayments = paymentRepository.existsByOrderIdAndStatus(orderId, PaymentStatus.PAID);
+        if (hasPaidPayments) {
+            throw new BusinessException(
+                    "Pedido com pagamentos confirmados não pode ser cancelado. Estorne os pagamentos primeiro.",
+                    HttpStatus.CONFLICT);
         }
 
         order.setStatus(OrderStatus.CANCELED);
@@ -245,6 +336,16 @@ public class OrderService {
             throw new BusinessException(
                     "Pedido já está " + order.getStatus().name().toLowerCase() + " e não pode ser fechado",
                     HttpStatus.CONFLICT);
+        }
+
+        // Validar se o caixa do pedido ainda está aberto
+        if (order.getCashRegisterId() != null) {
+            CashRegister cashRegister = cashRegisterRepository.findById(order.getCashRegisterId())
+                    .orElseThrow(() -> new BusinessException("Caixa associado ao pedido não encontrado", HttpStatus.NOT_FOUND));
+
+            if (cashRegister.getStatus() != CashRegisterStatus.OPEN) {
+                throw new BusinessException("Caixa associado ao pedido já foi fechado", HttpStatus.CONFLICT);
+            }
         }
 
         order.setStatus(OrderStatus.CLOSED);
@@ -397,6 +498,7 @@ public class OrderService {
 
         return new OrderResponse(
                 order.getId(),
+                order.getIdentifier(),
                 order.getStatus(),
                 order.getTotal(),
                 order.getCashRegisterId(),

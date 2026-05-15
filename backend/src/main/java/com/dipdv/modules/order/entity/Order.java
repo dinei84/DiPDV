@@ -30,6 +30,9 @@ public class Order {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    @Column(name = "identifier", length = 100)
+    private String identifier;
+
     @Column(name = "cash_register_id")
     private UUID cashRegisterId;               // nullable — opcional no MVP
 

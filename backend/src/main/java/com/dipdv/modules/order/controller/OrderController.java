@@ -66,6 +66,16 @@ public class OrderController {
         return orderService.removeItem(id, itemId);
     }
 
+    @PatchMapping("/{id}/items/{itemId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    @Operation(summary = "Editar quantidade de item no pedido")
+    public OrderResponse updateItemQuantity(
+            @PathVariable UUID id,
+            @PathVariable UUID itemId,
+            @RequestBody @Valid UpdateItemQuantityRequest request) {
+        return orderService.updateItemQuantity(id, itemId, request);
+    }
+
     @PatchMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Cancelar pedido")
