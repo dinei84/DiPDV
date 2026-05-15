@@ -40,6 +40,31 @@ class CashRegisterControllerIT extends ControllerIntegrationSupport {
     }
 
     @Test
+    @DisplayName("POST /cash-registers gera audit_log CASH_REGISTER_OPENED")
+    void openCashRegister_shouldCreateAuditLog() throws Exception {
+        var result = mockMvc.perform(post("/api/v1/cash-registers")
+                .header("Authorization", tokenFor("CASHIER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"openingBalance\": 100.00}"))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+        String id = objectMapper.readTree(
+            result.getResponse().getContentAsString()).get("id").asText();
+
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM audit_log " +
+            "WHERE tenant_id = ?::uuid AND action = 'CASH_REGISTER_OPENED' " +
+            "AND entity = 'cash_registers' AND entity_id = ?::uuid",
+            Integer.class,
+            TENANT_ID.toString(),
+            id
+        );
+
+        org.junit.jupiter.api.Assertions.assertEquals(1, count);
+    }
+
+    @Test
     @DisplayName("POST /cash-registers com caixa já aberto → 409")
     void openCashRegister_whenAlreadyOpen_shouldReturn409() throws Exception {
         // Abrir primeiro caixa
