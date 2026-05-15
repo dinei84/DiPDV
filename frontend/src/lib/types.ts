@@ -38,6 +38,44 @@ export interface ProductDTO {
   price: number;
 }
 
+export type CashMovementType = 'SUPPLY' | 'BLEEDING';
+
+export interface CashMovement {
+  id: string;
+  type: CashMovementType;
+  amount: number;
+  description: string;
+  createdAt: string;
+}
+
+export interface CashRegister {
+  id: string;
+  status: 'OPEN' | 'CLOSED';
+  openingBalance: number;
+  closingBalance: number | null;
+  physicalBalance: number | null;
+  difference: number | null;
+  totalCash: number;
+  totalPix: number;
+  openedAt: string;
+  closedAt: string | null;
+  movements: CashMovement[];
+}
+
+export interface OpenCashRegisterDTO {
+  openingBalance: string;
+}
+
+export interface CloseCashRegisterDTO {
+  physicalBalance: string;
+}
+
+export interface CashMovementDTO {
+  type: CashMovementType;
+  amount: string;
+  description: string;
+}
+
 export type Page<T> = {
   content: T[];
   totalPages: number;

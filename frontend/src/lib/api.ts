@@ -14,9 +14,13 @@ async function safeParseJson(response: Response) {
   }
 }
 
+type ApiFetchOptions = RequestInit & {
+  suppressErrorToast?: boolean;
+};
+
 export async function apiFetch<T>(
   path: string,
-  options?: RequestInit
+  options?: ApiFetchOptions
 ): Promise<T> {
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('dipdv_token') : null;
@@ -43,21 +47,21 @@ export async function apiFetch<T>(
 
   if (res.status === 403) {
     const message = body?.message || body?.module || 'Acesso negado';
-    toast.error(message);
+    if (!options?.suppressErrorToast) toast.error(message);
     throw new ApiError(res.status, body, message);
   }
 
   if (!res.ok) {
     const message = body?.message || `Erro ${res.status}`;
-    toast.error(message);
+    if (!options?.suppressErrorToast) toast.error(message);
     throw new ApiError(res.status, body, message);
   }
 
   return body as T;
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
-  return apiFetch<T>(path, { method: 'GET' });
+export async function apiGet<T>(path: string, options?: ApiFetchOptions): Promise<T> {
+  return apiFetch<T>(path, { ...options, method: 'GET' });
 }
 
 export async function apiPost<T>(path: string, data?: any): Promise<T> {
