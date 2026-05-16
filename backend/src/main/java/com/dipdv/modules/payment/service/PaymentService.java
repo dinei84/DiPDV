@@ -14,6 +14,8 @@ import com.dipdv.modules.payment.entity.Payment;
 import com.dipdv.modules.payment.entity.enums.PaymentMethod;
 import com.dipdv.modules.payment.entity.enums.PaymentStatus;
 import com.dipdv.modules.payment.repository.PaymentRepository;
+import com.dipdv.shared.audit.AuditAction;
+import com.dipdv.shared.audit.Auditable;
 import com.dipdv.shared.exception.BusinessException;
 import com.dipdv.shared.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class PaymentService {
     private final NfceService nfceService;
 
     @Transactional
+    @Auditable(action = AuditAction.PAYMENT_REGISTERED, entity = "payments")
     public PaymentResponse registerPayment(RegisterPaymentRequest request) {
         UUID tenantId = TenantContext.getRequired();
 

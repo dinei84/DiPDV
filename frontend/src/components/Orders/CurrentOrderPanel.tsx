@@ -7,6 +7,7 @@ import { apiPriceToBRL } from '@/lib/price';
 import { ConfirmDialog } from '@/lib/confirm/ConfirmDialog';
 import CancelOrderDialog from './CancelOrderDialog';
 import NewOrderDialog from './NewOrderDialog';
+import PaymentDialog from './PaymentDialog';
 
 interface CurrentOrderPanelProps {
   onNewOrderClick: () => void;
@@ -16,6 +17,7 @@ export default function CurrentOrderPanel({ onNewOrderClick }: CurrentOrderPanel
   const { currentOrder, updateQuantity, removeItem, cancelOrder } = useOrders();
   const [itemToRemove, setItemToRemove] = useState<{ orderId: string; itemId: string } | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
 
   if (!currentOrder) return null;
 
@@ -137,9 +139,9 @@ export default function CurrentOrderPanel({ onNewOrderClick }: CurrentOrderPanel
           </button>
 
           <button
-            disabled
-            title="Disponível no próximo passo — pagamentos"
-            className="w-full rounded-md bg-gray-400 px-3 py-2 text-sm font-medium text-white cursor-not-allowed opacity-50"
+            onClick={() => setPaymentOpen(true)}
+            disabled={currentOrder.items.length === 0}
+            className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Fechar comanda
           </button>
@@ -165,6 +167,13 @@ export default function CurrentOrderPanel({ onNewOrderClick }: CurrentOrderPanel
           onCancel={() => setCancelDialogOpen(false)}
         />
       )}
+
+      {/* Payment dialog */}
+      <PaymentDialog
+        order={currentOrder}
+        isOpen={paymentOpen}
+        onClose={() => setPaymentOpen(false)}
+      />
     </>
   );
 }

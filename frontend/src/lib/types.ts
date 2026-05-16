@@ -138,3 +138,25 @@ export interface UpdateQuantityDTO {
 export interface CancelOrderDTO {
   reason: string;
 }
+
+export type PaymentMethod = 'CASH' | 'PIX' | 'CARD';
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'CANCELED' | 'REFUNDED';
+
+export interface Payment {
+  id: string;
+  orderId: string;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  amount: number;
+  changeAmount: number;
+  idempotencyKey: string;
+  gatewayRef?: string;
+  createdAt: string;
+}
+
+export interface RegisterPaymentDTO {
+  orderId: string;
+  method: PaymentMethod;
+  amount: string;
+  idempotencyKey: string;
+}

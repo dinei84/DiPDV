@@ -9,6 +9,7 @@ public enum AuditAction {
     STOCK_ADJUSTED,
     PRODUCT_DELETED,
     USER_DEACTIVATED,
+    PAYMENT_REGISTERED,
     PAYMENT_REFUNDED,
 
     // Ações SUPER_ADMIN

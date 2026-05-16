@@ -333,6 +333,12 @@ public class OrderService {
         UUID tenantId = TenantContext.getRequired();
         Order order = findOrderOrThrow(orderId, tenantId);
 
+        if (order.getStatus() == OrderStatus.CLOSED) {
+            // Idempotent: already closed, return as-is
+            List<OrderItem> items = orderItemRepository.findByOrderIdWithModifiers(orderId);
+            return toOrderResponse(order, items);
+        }
+
         if (order.getStatus() != OrderStatus.OPEN) {
             throw new BusinessException(
                     "Pedido já está " + order.getStatus().name().toLowerCase() + " e não pode ser fechado",
