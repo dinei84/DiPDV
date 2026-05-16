@@ -5,6 +5,7 @@ import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api';
 import { ApiError } from '@/lib/api-error';
 import {
   Order,
+  OrderSummary,
   OrderStatus,
   CreateOrderDTO,
   AddItemDTO,
@@ -15,7 +16,7 @@ import {
 import { toast } from '@/lib/toast';
 
 interface OrdersContextType {
-  openOrders: Order[];
+  openOrders: OrderSummary[];
   currentOrder: Order | null;
   currentOrderId: string | null;
   setCurrentOrderId: (id: string | null) => void;
@@ -31,20 +32,20 @@ interface OrdersContextType {
 const OrdersContext = createContext<OrdersContextType | undefined>(undefined);
 
 export function OrdersProvider({ children }: { children: React.ReactNode }) {
-  const [openOrders, setOpenOrders] = useState<Order[]>([]);
+  const [openOrders, setOpenOrders] = useState<OrderSummary[]>([]);
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const currentOrder = openOrders.find((o) => o.id === currentOrderId) ?? null;
 
   const refresh = async () => {
     setLoading(true);
     try {
-      const data = await apiGet<Page<Order>>('/api/v1/orders?status=OPEN');
+      const data = await apiGet<Page<OrderSummary>>('/api/v1/orders?status=OPEN');
       setOpenOrders(data.content ?? []);
 
       if (currentOrderId && !data.content?.find((o) => o.id === currentOrderId)) {
         setCurrentOrderId(null);
+        setCurrentOrder(null);
       }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
@@ -53,14 +54,42 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loadCurrentOrder = async (orderId: string) => {
+    try {
+      const order = await apiGet<Order>(`/api/v1/orders/${orderId}`);
+      setCurrentOrder(order);
+    } catch (error) {
+      console.error('Failed to load order details:', error);
+      setCurrentOrder(null);
+    }
+  };
+
   useEffect(() => {
     refresh();
   }, []);
 
+  useEffect(() => {
+    if (currentOrderId) {
+      loadCurrentOrder(currentOrderId);
+    } else {
+      setCurrentOrder(null);
+    }
+  }, [currentOrderId]);
+
   const createOrder = async (dto: CreateOrderDTO) => {
     try {
       const newOrder = await apiPost<Order>('/api/v1/orders', dto);
-      setOpenOrders((prev) => [...prev, newOrder]);
+      setOpenOrders((prev) => [
+        ...prev,
+        {
+          id: newOrder.id,
+          identifier: newOrder.identifier,
+          status: newOrder.status,
+          total: newOrder.total,
+          itemCount: newOrder.items.length,
+          createdAt: newOrder.createdAt,
+        },
+      ]);
       setCurrentOrderId(newOrder.id);
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
@@ -74,7 +103,18 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     try {
       const dto: AddItemDTO = { productId, quantity };
       const updatedOrder = await apiPost<Order>(`/api/v1/orders/${orderId}/items`, dto);
-      setOpenOrders((prev) => prev.map((o) => (o.id === orderId ? updatedOrder : o)));
+      setCurrentOrder(updatedOrder);
+      setOpenOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                total: updatedOrder.total,
+                itemCount: updatedOrder.items.length,
+              }
+            : o
+        )
+      );
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         toast.error(error.message);
@@ -90,7 +130,18 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
         `/api/v1/orders/${orderId}/items/${itemId}`,
         dto
       );
-      setOpenOrders((prev) => prev.map((o) => (o.id === orderId ? updatedOrder : o)));
+      setCurrentOrder(updatedOrder);
+      setOpenOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                total: updatedOrder.total,
+                itemCount: updatedOrder.items.length,
+              }
+            : o
+        )
+      );
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         toast.error(error.message);
@@ -102,7 +153,18 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
   const removeItem = async (orderId: string, itemId: string) => {
     try {
       const updatedOrder = await apiDelete<Order>(`/api/v1/orders/${orderId}/items/${itemId}`);
-      setOpenOrders((prev) => prev.map((o) => (o.id === orderId ? updatedOrder : o)));
+      setCurrentOrder(updatedOrder);
+      setOpenOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                total: updatedOrder.total,
+                itemCount: updatedOrder.items.length,
+              }
+            : o
+        )
+      );
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         toast.error(error.message);
@@ -114,10 +176,11 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
   const cancelOrder = async (orderId: string, reason: string) => {
     try {
       const dto: CancelOrderDTO = { reason };
-      const updatedOrder = await apiPatch<Order>(`/api/v1/orders/${orderId}/cancel`, dto);
+      await apiPatch<Order>(`/api/v1/orders/${orderId}/cancel`, dto);
       setOpenOrders((prev) => prev.filter((o) => o.id !== orderId));
       if (currentOrderId === orderId) {
         setCurrentOrderId(null);
+        setCurrentOrder(null);
       }
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {

@@ -92,7 +92,7 @@ export default function OpenOrdersDrawer({ open, onClose }: OpenOrdersDrawerProp
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">{order.items.length} item(ns)</span>
+                    <span className="text-gray-500">{order.itemCount} item(ns)</span>
                     <span className="font-semibold text-gray-900">
                       {apiPriceToBRL(order.total)}
                     </span>

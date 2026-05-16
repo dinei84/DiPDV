@@ -99,6 +99,15 @@ export interface OrderItem {
   totalPrice: number;
 }
 
+export interface OrderSummary {
+  id: string;
+  identifier: string | null;
+  status: OrderStatus;
+  total: number;
+  itemCount: number;
+  createdAt: string;
+}
+
 export interface Order {
   id: string;
   identifier: string | null;
