@@ -3,12 +3,23 @@
 import React, { useState } from 'react';
 import { useOrders } from '@/lib/orders/OrdersContext';
 import OpenOrdersDrawer from './OpenOrdersDrawer';
+import NewOrderDialog from './NewOrderDialog';
 
 export default function OpenOrdersIndicator() {
   const { openOrders } = useOrders();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [newOrderDialogOpen, setNewOrderDialogOpen] = useState(false);
 
   const count = openOrders.length;
+
+  const handleOpenNewOrderDialog = () => {
+    setNewOrderDialogOpen(true);
+    setDrawerOpen(false); // Close drawer when opening modal
+  };
+
+  const handleCloseNewOrderDialog = () => {
+    setNewOrderDialogOpen(false);
+  };
 
   return (
     <>
@@ -32,7 +43,13 @@ export default function OpenOrdersIndicator() {
         )}
       </button>
 
-      <OpenOrdersDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <OpenOrdersDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onNewOrder={handleOpenNewOrderDialog}
+      />
+
+      <NewOrderDialog open={newOrderDialogOpen} onClose={handleCloseNewOrderDialog} />
     </>
   );
 }
