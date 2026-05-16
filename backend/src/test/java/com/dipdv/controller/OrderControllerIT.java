@@ -380,4 +380,26 @@ class OrderControllerIT extends ControllerIntegrationSupport {
                 .content("{\"quantity\": 0}"))
             .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("GET /orders?status=OPEN inclui identifier (preenchido)")
+    void listOrders_shouldIncludeIdentifier() throws Exception {
+        openCashRegister();
+
+        // Criar comanda com identifier "Mesa 1"
+        mockMvc.perform(post("/api/v1/orders")
+                .header("Authorization", tokenFor("CASHIER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"identifier\": \"Mesa 1\"}"))
+            .andExpect(status().isCreated());
+
+        // Listar todas as OPEN
+        mockMvc.perform(get("/api/v1/orders?status=OPEN")
+                .header("Authorization", tokenFor("MANAGER")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[0]").exists())
+            .andExpect(jsonPath("$.content[0].identifier").value("Mesa 1"))
+            .andExpect(jsonPath("$.content[0].itemCount").value(0));
+    }
 }

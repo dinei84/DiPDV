@@ -111,6 +111,7 @@ public class OrderService {
         }
         return orders.map(o -> new OrderSummaryResponse(
                 o.getId(),
+                o.getIdentifier(),
                 o.getStatus(),
                 o.getTotal(),
                 orderItemRepository.countByOrderId(o.getId()),

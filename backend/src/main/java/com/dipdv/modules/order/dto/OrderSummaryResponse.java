@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public record OrderSummaryResponse(
         UUID id,
+        String identifier,
         OrderStatus status,
         BigDecimal total,
         long itemCount,
