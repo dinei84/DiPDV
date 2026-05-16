@@ -87,3 +87,45 @@ export type Page<T> = {
   numberOfElements: number;
   empty: boolean;
 };
+
+export type OrderStatus = 'OPEN' | 'CLOSED' | 'CANCELED';
+
+export interface OrderItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface Order {
+  id: string;
+  identifier: string | null;
+  status: OrderStatus;
+  total: number;
+  items: OrderItem[];
+  cashRegisterId: string;
+  userId: string;
+  createdAt: string;
+  closedAt: string | null;
+  cancelReason: string | null;
+  version: number;
+}
+
+export interface CreateOrderDTO {
+  identifier?: string | null;
+}
+
+export interface AddItemDTO {
+  productId: string;
+  quantity: number;
+}
+
+export interface UpdateQuantityDTO {
+  quantity: number;
+}
+
+export interface CancelOrderDTO {
+  reason: string;
+}

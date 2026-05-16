@@ -7,3 +7,6 @@ export const apiPriceToCents = (apiPrice: number): number =>
 
 export const centsToApiString = (cents: number): string =>
   (cents / 100).toFixed(2);
+
+export const apiPriceToBRL = (apiPrice: number): string =>
+  centsToBRL(apiPriceToCents(apiPrice));

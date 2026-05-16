@@ -7,7 +7,7 @@ import { apiGet, apiPost } from '@/lib/api';
 import { ApiError } from '@/lib/api-error';
 import { getAuth } from '@/lib/auth';
 import { useCashRegister } from '@/lib/cash-register/CashRegisterContext';
-import { apiPriceToCents, centsToApiString, centsToBRL } from '@/lib/price';
+import { apiPriceToCents, apiPriceToBRL, centsToApiString, centsToBRL } from '@/lib/price';
 import { toast } from '@/lib/toast';
 import {
   CashMovementType,
@@ -251,15 +251,15 @@ export default function CashRegisterDrawer({ open, onClose }: CashRegisterDrawer
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-lg border border-gray-200 p-3">
                   <p className="text-gray-500">Fundo</p>
-                  <p className="font-semibold text-gray-900">{centsToBRL(apiPriceToCents(register.openingBalance))}</p>
+                  <p className="font-semibold text-gray-900">{apiPriceToBRL(register.openingBalance)}</p>
                 </div>
                 <div className="rounded-lg border border-gray-200 p-3">
                   <p className="text-gray-500">Total CASH</p>
-                  <p className="font-semibold text-gray-900">{centsToBRL(apiPriceToCents(register.totalCash))}</p>
+                  <p className="font-semibold text-gray-900">{apiPriceToBRL(register.totalCash)}</p>
                 </div>
                 <div className="rounded-lg border border-gray-200 p-3">
                   <p className="text-gray-500">Total PIX</p>
-                  <p className="font-semibold text-gray-900">{centsToBRL(apiPriceToCents(register.totalPix))}</p>
+                  <p className="font-semibold text-gray-900">{apiPriceToBRL(register.totalPix)}</p>
                 </div>
                 <div className="rounded-lg border border-gray-200 p-3">
                   <p className="text-gray-500">Tempo aberto</p>
@@ -295,7 +295,7 @@ export default function CashRegisterDrawer({ open, onClose }: CashRegisterDrawer
                             </div>
                             <p className={movement.type === 'SUPPLY' ? 'text-green-700' : 'text-red-700'}>
                               {movement.type === 'SUPPLY' ? '+' : '-'}
-                              {centsToBRL(apiPriceToCents(movement.amount))}
+                              {apiPriceToBRL(movement.amount)}
                             </p>
                           </div>
                         </div>

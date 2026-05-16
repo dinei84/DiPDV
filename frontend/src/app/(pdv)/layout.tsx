@@ -3,8 +3,10 @@
 import DashboardWidget from '@/components/dashboard/DashboardWidget';
 import AuthGuard from '@/components/AuthGuard';
 import CashRegisterIndicator from '@/components/CashRegister/CashRegisterIndicator';
+import OpenOrdersIndicator from '@/components/Orders/OpenOrdersIndicator';
 import { ModulesProvider } from '@/lib/hooks/useModules';
 import { CashRegisterProvider } from '@/lib/cash-register/CashRegisterContext';
+import { OrdersProvider } from '@/lib/orders/OrdersContext';
 import ModuleGate from '@/components/ModuleGate';
 import { clearAuth, getAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
@@ -31,13 +33,14 @@ export default function PdvLayout({
     <Suspense fallback={null}>
       <AuthGuard>
         <CashRegisterProvider>
-          <ModulesProvider>
+          <OrdersProvider>
+            <ModulesProvider>
             <div className="min-h-screen bg-gray-100 flex flex-col">
               <header className="bg-blue-900 text-white px-6 py-3 flex items-center justify-between shadow-md relative z-50">
                 <div className="flex items-center gap-8">
                   <Link href="/" className="font-bold text-xl tracking-tight">DiPDV</Link>
                   <nav className="flex items-center gap-6 text-sm font-medium">
-                    <Link href="/" className="hover:text-blue-200 transition">
+                    <Link href="/pdv" className="hover:text-blue-200 transition">
                       PDV
                     </Link>
                     <ModuleGate module="REPORTS">
@@ -77,6 +80,7 @@ export default function PdvLayout({
                         )}
                       </div>
                     )}
+                    <OpenOrdersIndicator />
                     <CashRegisterIndicator />
                   </nav>
                 </div>
@@ -95,6 +99,7 @@ export default function PdvLayout({
               </main>
             </div>
           </ModulesProvider>
+            </OrdersProvider>
         </CashRegisterProvider>
       </AuthGuard>
     </Suspense>
