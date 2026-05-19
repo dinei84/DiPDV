@@ -244,7 +244,14 @@ class SaleFlowIT extends PostgresIntegrationSupport {
     @Test
     @DisplayName("Pagamento sem caixa aberto → 409")
     void payment_withoutOpenCashRegister_shouldReturn409() throws Exception {
-        // Criar e fechar pedido
+        // 1. Abrir caixa
+        mockMvc.perform(post("/api/v1/cash-registers")
+                .header("Authorization", cashierToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"openingBalance\": 0}"))
+            .andExpect(status().isCreated());
+
+        // 2. Criar e fechar pedido
         MvcResult orderResult = mockMvc.perform(post("/api/v1/orders")
                 .header("Authorization", cashierToken)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -258,7 +265,10 @@ class SaleFlowIT extends PostgresIntegrationSupport {
                 .header("Authorization", cashierToken))
             .andExpect(status().isOk());
 
-        // Tentar pagar sem caixa aberto
+        // 3. Fechar o caixa manualmente para o teste
+        jdbc.update("UPDATE cash_registers SET status = 'CLOSED' WHERE tenant_id = ?::uuid", TENANT_ID.toString());
+
+        // 4. Tentar pagar sem caixa aberto → 409
         mockMvc.perform(post("/api/v1/payments")
                 .header("Authorization", cashierToken)
                 .contentType(MediaType.APPLICATION_JSON)

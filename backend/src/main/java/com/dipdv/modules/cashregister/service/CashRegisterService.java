@@ -36,6 +36,7 @@ public class CashRegisterService {
     private final CashMovementRepository cashMovementRepository;
 
     @Transactional
+    @Auditable(action = AuditAction.CASH_REGISTER_OPENED, entity = "cash_registers")
     public CashRegisterResponse openCashRegister(OpenCashRegisterRequest request) {
         UUID tenantId = TenantContext.getRequired();
         UUID userId   = extractUserId();

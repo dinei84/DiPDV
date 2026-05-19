@@ -5,6 +5,9 @@ import com.dipdv.modules.catalog.entity.ModifierOption;
 import com.dipdv.modules.catalog.entity.Product;
 import com.dipdv.modules.catalog.repository.ModifierGroupRepository;
 import com.dipdv.modules.catalog.repository.ProductRepository;
+import com.dipdv.modules.cashregister.entity.CashRegister;
+import com.dipdv.modules.cashregister.entity.enums.CashRegisterStatus;
+import com.dipdv.modules.cashregister.repository.CashRegisterRepository;
 import com.dipdv.modules.inventory.repository.StockMovementRepository;
 import com.dipdv.modules.order.dto.AddItemRequest;
 import com.dipdv.modules.order.dto.CreateOrderRequest;
@@ -14,9 +17,12 @@ import com.dipdv.modules.order.entity.OrderItem;
 import com.dipdv.modules.order.entity.enums.OrderStatus;
 import com.dipdv.modules.order.repository.OrderItemRepository;
 import com.dipdv.modules.order.repository.OrderRepository;
+import com.dipdv.modules.payment.entity.enums.PaymentStatus;
+import com.dipdv.modules.payment.repository.PaymentRepository;
 import com.dipdv.shared.exception.BusinessException;
 import com.dipdv.shared.security.DiPdvAuthDetails;
 import com.dipdv.shared.tenant.TenantContext;
+import com.dipdv.shared.tenant.repository.TenantRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,6 +66,15 @@ class OrderServiceTest {
     @Mock
     private StockMovementRepository stockMovementRepository;
 
+    @Mock
+    private TenantRepository tenantRepository;
+
+    @Mock
+    private CashRegisterRepository cashRegisterRepository;
+
+    @Mock
+    private PaymentRepository paymentRepository;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -95,23 +110,30 @@ class OrderServiceTest {
 
     @Test
     void createOrder_whenValid_shouldReturnOpenOrder() {
+        UUID registerId = UUID.randomUUID();
+        CashRegister cashRegister = CashRegister.builder().id(registerId).status(CashRegisterStatus.OPEN).build();
+        
         Order saved = Order.builder()
                 .id(ORDER_ID)
                 .tenantId(TENANT_ID)
                 .userId(USER_ID)
+                .cashRegisterId(registerId)
                 .status(OrderStatus.OPEN)
                 .total(BigDecimal.ZERO)
                 .version(0)
                 .createdAt(OffsetDateTime.now())
                 .build();
 
-        when(orderRepository.save(any(Order.class))).thenReturn(saved);
+        when(cashRegisterRepository.findByTenantIdAndStatus(TENANT_ID, CashRegisterStatus.OPEN))
+                .thenReturn(Optional.of(cashRegister));
+        when(orderRepository.saveAndFlush(any(Order.class))).thenReturn(saved);
 
         OrderResponse response = orderService.createOrder(new CreateOrderRequest(null));
 
         assertNotNull(response);
         assertEquals(OrderStatus.OPEN, response.status());
         assertEquals(BigDecimal.ZERO, response.total());
+        assertEquals(registerId, response.cashRegisterId());
         assertEquals(0, response.version());
     }
 
@@ -348,11 +370,16 @@ class OrderServiceTest {
     @Test
     void cancelOrder_whenValid_shouldSetStatusAndReason() {
         Order order = Order.builder()
-                .id(ORDER_ID).tenantId(TENANT_ID).userId(USER_ID)
-                .status(OrderStatus.OPEN).total(BigDecimal.ZERO).version(0)
+                .id(ORDER_ID)
+                .tenantId(TENANT_ID)
+                .userId(USER_ID)
+                .status(OrderStatus.OPEN)
+                .total(BigDecimal.ZERO)
+                .version(0)
                 .build();
 
         when(orderRepository.findByIdAndTenantId(ORDER_ID, TENANT_ID)).thenReturn(Optional.of(order));
+        when(paymentRepository.existsByOrderIdAndStatus(ORDER_ID, PaymentStatus.PAID)).thenReturn(false);
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(orderItemRepository.findByOrderIdWithModifiers(ORDER_ID)).thenReturn(List.of());
 
@@ -361,6 +388,7 @@ class OrderServiceTest {
         assertEquals(OrderStatus.CANCELED, response.status());
         verify(orderRepository).save(any(Order.class));
     }
+
 
     // ── Estoque ─────────────────────────────────────────────────────────────────
 

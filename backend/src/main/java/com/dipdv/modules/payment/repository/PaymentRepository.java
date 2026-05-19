@@ -1,6 +1,7 @@
 package com.dipdv.modules.payment.repository;
 
 import com.dipdv.modules.payment.entity.Payment;
+import com.dipdv.modules.payment.entity.enums.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,6 +15,8 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     // Idempotência — chave única por tenant
     Optional<Payment> findByTenantIdAndIdempotencyKey(UUID tenantId, String idempotencyKey);
+
+    boolean existsByOrderIdAndStatus(UUID orderId, PaymentStatus status);
 
     // Soma dos valores PAID de um pedido (pagamento misto)
     @Query("""

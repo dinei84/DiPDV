@@ -7,6 +7,7 @@ import { apiGet, apiPost, apiPut, apiDelete, apiPatch } from '@/lib/api';
 import { Product, ProductDTO, Category, Page } from '@/lib/types';
 import { toast } from '@/lib/toast';
 import { useConfirm } from '@/lib/confirm';
+import { apiPriceToCents, apiPriceToBRL, centsToApiString, centsToBRL } from '@/lib/price';
 import { MoneyInput } from '@/components/MoneyInput';
 import { Plus, Edit2, Trash2, RotateCcw, X, ChevronRight, Eye, EyeOff } from 'lucide-react';
 
@@ -73,7 +74,7 @@ export default function ProductsPage() {
         categoryId: product.categoryId,
         name: product.name,
         description: product.description,
-        price: product.price * 100,
+        price: apiPriceToCents(product.price),
       });
     } else {
       setEditingProduct(null);
@@ -97,7 +98,7 @@ export default function ProductsPage() {
     try {
       const payload = {
         ...formData,
-        price: (formData.price / 100).toFixed(2),
+        price: centsToApiString(formData.price),
       };
       if (editingProduct) {
         await apiPut(`/api/v1/products/${editingProduct.id}`, payload);
@@ -231,7 +232,7 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 text-gray-500">{categoryName}</td>
                     <td className="px-6 py-4 font-medium text-gray-900">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+                      {apiPriceToBRL(product.price)}
                     </td>
                     <td className="px-6 py-4">
                       {isDeleted ? (

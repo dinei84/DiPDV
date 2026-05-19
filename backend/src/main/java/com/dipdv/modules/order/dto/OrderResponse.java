@@ -9,6 +9,7 @@ import java.util.UUID;
 
 public record OrderResponse(
         UUID id,
+        String identifier,
         OrderStatus status,
         BigDecimal total,
         UUID cashRegisterId,
