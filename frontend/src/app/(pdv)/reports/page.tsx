@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ReportFilters from '@/components/reports/ReportFilters';
 import TopProductsTable from '@/components/reports/TopProductsTable';
 import { apiFetch } from '@/lib/api';
+import { API_URL } from '@/lib/api-url';
 import ModuleGate from '@/components/ModuleGate';
 import ModuleNotAvailable from '@/components/ModuleNotAvailable';
 
@@ -37,7 +38,7 @@ export default function ReportsPage() {
       typeof window !== 'undefined'
         ? localStorage.getItem('dipdv_token')
         : null;
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/reports/summary/pdf?from=${from}&to=${to}`;
+    const url = `${API_URL}/api/v1/reports/summary/pdf?from=${from}&to=${to}`;
 
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },

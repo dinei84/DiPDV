@@ -76,6 +76,26 @@ export interface CashMovementDTO {
   description: string;
 }
 
+export type Role = 'ADMIN' | 'MANAGER' | 'CASHIER' | 'SUPER_ADMIN';
+
+export interface User {
+  id: string;
+  tenantId: string;
+  email: string;
+  name: string;
+  role: Role;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserDTO {
+  email?: string;
+  name: string;
+  role: 'MANAGER' | 'CASHIER';
+  password?: string;
+}
+
 export type Page<T> = {
   content: T[];
   totalPages: number;

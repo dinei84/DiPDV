@@ -1,6 +1,7 @@
 package com.dipdv.shared.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -58,6 +59,9 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:3001}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -133,21 +137,17 @@ public class SecurityConfig {
     }
 
     /**
-     * CORS: permite o frontend Next.js acessar a API.
-     * Em produção, substituir a origem pelo domínio real do frontend.
-     *
-     * TODO: mover origens para application.yml quando deploy em produção.
+     * CORS: permite frontends configurados por env var acessar a API.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Desenvolvimento local
-        config.setAllowedOrigins(List.of(
-            "http://localhost:3000",    // PDV dev
-            "http://localhost:3001",    // Admin dev
-            "https://admin.dipdv.app"   // Admin prod
-        ));
+        config.setAllowedOrigins(List.of(allowedOrigins.split(","))
+            .stream()
+            .map(String::trim)
+            .filter(origin -> !origin.isBlank())
+            .toList());
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
@@ -156,6 +156,7 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/actuator/**", config);
         return source;
     }
 }
