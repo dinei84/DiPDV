@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api';
 import { ApiError } from '@/lib/api-error';
 import {
@@ -36,6 +37,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const refresh = async () => {
     setLoading(true);
@@ -91,6 +93,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
         },
       ]);
       setCurrentOrderId(newOrder.id);
+      router.push('/pdv');
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         toast.error(error.message);
