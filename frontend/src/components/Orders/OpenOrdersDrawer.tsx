@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { X, Plus } from 'lucide-react';
 import { useOrders } from '@/lib/orders/OrdersContext';
 import { apiPriceToBRL } from '@/lib/price';
@@ -13,12 +14,14 @@ interface OpenOrdersDrawerProps {
 
 export default function OpenOrdersDrawer({ open, onClose, onNewOrder }: OpenOrdersDrawerProps) {
   const { openOrders, setCurrentOrderId } = useOrders();
+  const router = useRouter();
 
   if (!open) return null;
 
   const handleSelectOrder = (id: string) => {
     setCurrentOrderId(id);
     onClose();
+    router.push('/pdv');
   };
 
   const formatIdentifier = (identifier: string | null, createdAt: string) => {
