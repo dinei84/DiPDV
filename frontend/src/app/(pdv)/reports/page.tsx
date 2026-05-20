@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReportFilters from '@/components/reports/ReportFilters';
 import TopProductsTable from '@/components/reports/TopProductsTable';
 import { apiFetch } from '@/lib/api';
 import { API_URL } from '@/lib/api-url';
 import ModuleGate from '@/components/ModuleGate';
 import ModuleNotAvailable from '@/components/ModuleNotAvailable';
+import { getAuth } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 interface TopProduct {
   productName: string;
@@ -15,11 +17,19 @@ interface TopProduct {
 }
 
 export default function ReportsPage() {
+  const router = useRouter();
   const today = new Date().toISOString().split('T')[0];
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const auth = getAuth();
+    if (auth && auth.role === 'CASHIER') {
+      router.replace('/pdv');
+    }
+  }, [router]);
 
   async function loadReports() {
     setLoading(true);

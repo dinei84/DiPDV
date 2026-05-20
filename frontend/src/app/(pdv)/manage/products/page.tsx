@@ -32,7 +32,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const auth = getAuth();
-    if (auth?.role !== 'ADMIN') {
+    if (auth?.role !== 'ADMIN' && auth?.role !== 'MANAGER') {
       router.replace('/');
       return;
     }

@@ -133,11 +133,11 @@ class SecurityControllerIT extends ControllerIntegrationSupport {
     }
 
     @Nested
-    @DisplayName("MANAGER não acessa endpoints exclusivos de ADMIN → 403")
+    @DisplayName("MANAGER tem acesso ao catálogo e relatórios")
     class ManagerRestrictions {
 
         @Test
-        void manager_cannotCreateProduct() throws Exception {
+        void manager_canCreateProduct() throws Exception {
             mockMvc.perform(post("/api/v1/products")
                     .header("Authorization", tokenFor("MANAGER"))
                     .contentType(MediaType.APPLICATION_JSON)
@@ -149,7 +149,7 @@ class SecurityControllerIT extends ControllerIntegrationSupport {
                           "stockMinLevel": 1
                         }
                     """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated());
         }
 
         @Test

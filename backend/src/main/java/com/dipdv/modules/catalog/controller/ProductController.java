@@ -44,14 +44,14 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPER_ADMIN')")
     @Operation(summary = "Criar produto")
     public ProductResponse createProduct(@RequestBody @Valid ProductRequest request) {
         return catalogService.createProduct(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPER_ADMIN')")
     @Operation(summary = "Atualizar produto")
     public ProductResponse updateProduct(@PathVariable UUID id, @RequestBody @Valid ProductRequest request) {
         return catalogService.updateProduct(id, request);
@@ -59,14 +59,14 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPER_ADMIN')")
     @Operation(summary = "Soft delete")
     public void deleteProduct(@PathVariable UUID id) {
         catalogService.deleteProduct(id);
     }
 
     @PatchMapping("/{id}/reactivate")
-    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','SUPER_ADMIN')")
     @Operation(summary = "Reativar produto deletado")
     public ProductResponse reactivateProduct(@PathVariable UUID id) {
         return catalogService.reactivateProduct(id);

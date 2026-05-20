@@ -84,8 +84,8 @@ class CashRegisterControllerIT extends ControllerIntegrationSupport {
     }
 
     @Test
-    @DisplayName("PATCH /cash-registers/{id}/close com CASHIER → 403")
-    void closeCashRegister_withCashier_shouldReturn403() throws Exception {
+    @DisplayName("PATCH /cash-registers/{id}/close com CASHIER → 200")
+    void closeCashRegister_withCashier_shouldReturn200() throws Exception {
         // Abrir caixa
         var result = mockMvc.perform(post("/api/v1/cash-registers")
                 .header("Authorization", tokenFor("CASHIER"))
@@ -101,6 +101,6 @@ class CashRegisterControllerIT extends ControllerIntegrationSupport {
                 .header("Authorization", tokenFor("CASHIER"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"physicalBalance\": 0}"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isOk());
     }
 }

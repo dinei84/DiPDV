@@ -40,7 +40,7 @@ public class OrderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     @Operation(summary = "Listar pedidos (paginado, filtro por status)")
     public Page<OrderSummaryResponse> listOrders(
             @RequestParam(required = false) OrderStatus status,
@@ -77,7 +77,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     @Operation(summary = "Cancelar pedido")
     public OrderResponse cancelOrder(
             @PathVariable UUID id,

@@ -41,7 +41,7 @@ public class CashRegisterController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     @Operation(summary = "Listar histórico de caixas")
     public Page<CashRegisterResponse> listRegisters(
             @PageableDefault(size = 20) Pageable pageable) {
@@ -49,7 +49,7 @@ public class CashRegisterController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     @Operation(summary = "Buscar caixa por ID")
     public CashRegisterResponse getById(@PathVariable UUID id) {
         return cashRegisterService.getById(id);
@@ -66,7 +66,7 @@ public class CashRegisterController {
     }
 
     @PatchMapping("/{id}/close")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     @Operation(summary = "Fechar caixa")
     public CashRegisterResponse closeCashRegister(
             @PathVariable UUID id,

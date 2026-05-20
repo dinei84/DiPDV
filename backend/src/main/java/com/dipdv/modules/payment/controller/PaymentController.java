@@ -38,7 +38,7 @@ public class PaymentController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     @Operation(summary = "Cancelar pagamento PENDING")
     public PaymentResponse cancelPayment(@PathVariable UUID id) {
         return paymentService.cancelPayment(id);
