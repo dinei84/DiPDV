@@ -50,8 +50,13 @@ public class UserManagementService {
             throw new BusinessException("Tenant inativo", HttpStatus.BAD_REQUEST);
         }
 
-        if (userRepository.existsByTenantIdAndEmailAndActiveTrue(tenantId, request.email())) {
-            throw new BusinessException("Já existe um usuário ativo com este email", HttpStatus.CONFLICT);
+        tenantContextService.applyGlobalLookupContext();
+        try {
+            if (userRepository.existsByEmailAndActiveTrue(request.email())) {
+                throw new BusinessException("Já existe um usuário ativo com este email na plataforma", HttpStatus.CONFLICT);
+            }
+        } finally {
+            tenantContextService.clearGlobalLookupContext();
         }
 
         User user = User.builder()
@@ -86,8 +91,13 @@ public class UserManagementService {
         UUID tenantId = TenantContext.getRequired();
         guardTenantAdminRole(request.role());
 
-        if (userRepository.existsByTenantIdAndEmailAndActiveTrue(tenantId, request.email())) {
-            throw new BusinessException("Já existe um usuário ativo com este email", HttpStatus.CONFLICT);
+        tenantContextService.applyGlobalLookupContext();
+        try {
+            if (userRepository.existsByEmailAndActiveTrue(request.email())) {
+                throw new BusinessException("Já existe um usuário ativo com este email na plataforma", HttpStatus.CONFLICT);
+            }
+        } finally {
+            tenantContextService.clearGlobalLookupContext();
         }
 
         User user = User.builder()
@@ -148,8 +158,13 @@ public class UserManagementService {
             return toResponse(user);
         }
 
-        if (userRepository.existsByTenantIdAndEmailAndActiveTrue(user.getTenantId(), user.getEmail())) {
-            throw new BusinessException("Já existe um usuário ativo com este email", HttpStatus.CONFLICT);
+        tenantContextService.applyGlobalLookupContext();
+        try {
+            if (userRepository.existsByEmailAndActiveTrue(user.getEmail())) {
+                throw new BusinessException("Já existe um usuário ativo com este email na plataforma", HttpStatus.CONFLICT);
+            }
+        } finally {
+            tenantContextService.clearGlobalLookupContext();
         }
 
         user.setActive(true);

@@ -51,11 +51,21 @@ export default function UsersPage() {
   const openDrawer = (user?: User) => {
     setEditingUser(user ?? null);
     setShowPassword(false);
-    setFormData(
-      user
-        ? { name: user.name, role: user.role as UserDTO['role'], password: '' }
-        : { email: '', name: '', role: 'CASHIER', password: '' }
-    );
+    if (user) {
+      setFormData({
+        name: user.name,
+        role: user.role as UserDTO['role'],
+        password: '',
+        email: user.email,
+      });
+    } else {
+      setFormData({
+        email: '',
+        name: '',
+        role: 'CASHIER',
+        password: '',
+      });
+    }
     setDrawerOpen(true);
   };
 
@@ -66,22 +76,24 @@ export default function UsersPage() {
 
   const saveUser = async (event?: FormEvent) => {
     event?.preventDefault();
-    const payload: UserDTO = {
-      name: formData.name,
-      role: formData.role,
-      password: formData.password?.trim() ? formData.password : undefined,
-    };
 
     try {
       if (editingUser) {
+        const payload = {
+          name: formData.name,
+          role: formData.role,
+          password: formData.password?.trim() ? formData.password : undefined,
+        };
         await apiPut(`/api/v1/users/${editingUser.id}`, payload);
         toast.success('Usuário atualizado com sucesso');
       } else {
-        await apiPost('/api/v1/users', {
-          ...payload,
+        const payload = {
           email: formData.email,
+          name: formData.name,
+          role: formData.role,
           password: formData.password,
-        });
+        };
+        await apiPost('/api/v1/users', payload);
         toast.success('Usuário criado com sucesso');
       }
       closeDrawer();
@@ -245,7 +257,7 @@ export default function UsersPage() {
                   type="email"
                   required
                   readOnly={!!editingUser}
-                  value={editingUser ? editingUser.email : formData.email ?? ''}
+                  value={formData.email ?? ''}
                   onChange={(event) => setFormData({ ...formData, email: event.target.value })}
                   className="block w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 read-only:bg-gray-100"
                 />

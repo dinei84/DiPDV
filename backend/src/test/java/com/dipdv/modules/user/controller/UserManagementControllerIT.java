@@ -68,7 +68,8 @@ class UserManagementControllerIT extends ControllerIntegrationSupport {
                       "password": "123"
                     }
                 """))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Já existe um usuário ativo com este email na plataforma"));
     }
 
     @Test
@@ -148,6 +149,28 @@ class UserManagementControllerIT extends ControllerIntegrationSupport {
     }
 
     @Test
+    @DisplayName("Conflito de email entre usuários ativos de tenants DIFERENTES retorna 409")
+    void crossTenantEmailConflictShouldReturn409() throws Exception {
+        UUID tenantB = createTenant("tenant-b-conflict");
+        createUser(tenantB, "global@duplicado.com", "User B", "ADMIN", true);
+
+        // Tenta criar no tenant A (TENANT_ID) o mesmo email que está ativo no B
+        mockMvc.perform(post("/api/v1/users")
+                .header("Authorization", tokenFor("ADMIN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "email": "global@duplicado.com",
+                      "name": "User A",
+                      "role": "CASHIER",
+                      "password": "123"
+                    }
+                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Já existe um usuário ativo com este email na plataforma"));
+    }
+
+    @Test
     @DisplayName("Conflito de email entre ativos no mesmo tenant retorna 409")
     void activeEmailConflictShouldReturn409() throws Exception {
         createUser(TENANT_ID, "cashier.conflict@cliente.com", "Cashier Conflict", "CASHIER", true);
@@ -163,7 +186,8 @@ class UserManagementControllerIT extends ControllerIntegrationSupport {
                       "password": "123"
                     }
                 """))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Já existe um usuário ativo com este email na plataforma"));
     }
 
     @Test
