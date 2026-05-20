@@ -53,7 +53,6 @@ function LoginForm() {
       const response = await apiPost<AuthData>('/api/v1/auth/login', {
         email,
         password,
-        tenantId: 'ffffffff-ffff-ffff-ffff-ffffffffffff', // Master tenant for SUPER_ADMIN
       });
 
       saveAuth(response);

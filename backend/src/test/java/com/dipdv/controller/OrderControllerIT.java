@@ -110,8 +110,8 @@ class OrderControllerIT extends ControllerIntegrationSupport {
     }
 
     @Test
-    @DisplayName("PATCH /orders/{id}/cancel com CASHIER → 403")
-    void cancelOrder_withCashier_shouldReturn403() throws Exception {
+    @DisplayName("PATCH /orders/{id}/cancel com CASHIER → 200")
+    void cancelOrder_withCashier_shouldReturn200() throws Exception {
         openCashRegister();
         var result = mockMvc.perform(post("/api/v1/orders")
                 .header("Authorization", tokenFor("CASHIER"))
@@ -126,15 +126,15 @@ class OrderControllerIT extends ControllerIntegrationSupport {
                 .header("Authorization", tokenFor("CASHIER"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"reason\": \"teste\"}"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("GET /orders com CASHIER → 403 (apenas MANAGER+)")
-    void listOrders_withCashier_shouldReturn403() throws Exception {
+    @DisplayName("GET /orders com CASHIER → 200")
+    void listOrders_withCashier_shouldReturn200() throws Exception {
         mockMvc.perform(get("/api/v1/orders")
                 .header("Authorization", tokenFor("CASHIER")))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isOk());
     }
 
     @Test

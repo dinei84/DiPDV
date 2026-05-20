@@ -56,7 +56,6 @@ public class AdminController {
             HttpServletResponse response) {
 
         AuthResponse auth = authService.login(new LoginRequest(
-                MasterTenantConstants.MASTER_TENANT_ID,
                 request.email(),
                 request.password()
         ));

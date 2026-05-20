@@ -2,11 +2,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveAuth, type AuthData } from '@/lib/auth';
+import { API_URL } from '@/lib/api-url';
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const [form, setForm] = useState({ tenantId: '', email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +17,7 @@ export default function LoginPage() {
     setError('');
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
+        `${API_URL}/api/v1/auth/login`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -44,19 +45,6 @@ export default function LoginPage() {
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tenant ID
-            </label>
-            <input
-              type="text"
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-              placeholder="UUID do estabelecimento"
-              value={form.tenantId}
-              onChange={(e) => setForm({ ...form, tenantId: e.target.value })}
-              required
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               E-mail

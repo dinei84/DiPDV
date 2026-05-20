@@ -35,7 +35,7 @@ public class NfceController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     @Operation(summary = "Cancelar NFC-e emitida")
     public NfceResponse cancel(
             @PathVariable UUID id,

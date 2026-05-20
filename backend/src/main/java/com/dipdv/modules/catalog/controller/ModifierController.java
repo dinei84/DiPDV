@@ -65,7 +65,7 @@ public class ModifierController {
     }
 
     @PostMapping("/modifier-groups")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Criar grupo de modificadores")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Grupo criado"),
@@ -80,7 +80,7 @@ public class ModifierController {
     }
 
     @PutMapping("/modifier-groups/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Atualizar grupo de modificadores")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Grupo atualizado"),
@@ -97,7 +97,7 @@ public class ModifierController {
     }
 
     @DeleteMapping("/modifier-groups/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Inativar grupo de modificadores")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Grupo inativado"),
@@ -114,7 +114,7 @@ public class ModifierController {
     // ── Modifier Options ─────────────────────────────────────────────────────
 
     @PostMapping("/modifier-groups/{id}/options")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Adicionar opção ao grupo")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Opção adicionada"),
@@ -131,7 +131,7 @@ public class ModifierController {
     }
 
     @PutMapping("/modifier-groups/{groupId}/options/{optionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Atualizar opção do grupo")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Opção atualizada"),
@@ -148,7 +148,7 @@ public class ModifierController {
     }
 
     @DeleteMapping("/modifier-groups/{groupId}/options/{optionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Remover opção do grupo")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Opção removida"),
@@ -180,7 +180,7 @@ public class ModifierController {
     }
 
     @PostMapping("/products/{productId}/modifiers/{groupId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Vincular grupo a produto")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Vínculo criado"),
@@ -198,7 +198,7 @@ public class ModifierController {
     }
 
     @DeleteMapping("/products/{productId}/modifiers/{groupId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Desvincular grupo do produto")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Vínculo removido"),

@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
@@ -33,8 +35,28 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     );
 
     /**
+     * Busca usuário ativo por email em qualquer tenant.
+     * Usado para login desambiguado (Sprint 6.1).
+     */
+    Optional<User> findByEmailAndActiveTrue(String email);
+
+    /**
+     * Verifica se um email já está em uso em qualquer tenant por um usuário ativo.
+     * Usado para validação global de email (Sprint 6.1).
+     */
+    boolean existsByEmailAndActiveTrue(String email);
+
+    /**
      * Verifica se um email já está em uso no tenant.
      * Útil para validação no cadastro de usuários (Sprint 1).
      */
     boolean existsByEmailAndTenantIdAndDeletedAtIsNull(String email, UUID tenantId);
+
+    boolean existsByTenantIdAndEmailAndActiveTrue(UUID tenantId, String email);
+
+    Page<User> findByTenantIdAndActiveTrueOrderByNameAsc(UUID tenantId, Pageable pageable);
+
+    Page<User> findByTenantIdOrderByNameAsc(UUID tenantId, Pageable pageable);
+
+    Optional<User> findByIdAndTenantId(UUID id, UUID tenantId);
 }

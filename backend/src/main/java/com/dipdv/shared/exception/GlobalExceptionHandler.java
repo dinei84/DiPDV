@@ -93,6 +93,13 @@ public class GlobalExceptionHandler {
                         "Pedido foi modificado por outro operador. Recarregue e tente novamente."));
     }
 
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiError> handleMediaTypeNotSupported(org.springframework.web.HttpMediaTypeNotSupportedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(ApiError.of(415, "UNSUPPORTED_MEDIA_TYPE", "Content-Type não suportado. Use application/json."));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
         log.error("Erro interno nao tratado", ex);

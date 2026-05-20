@@ -234,11 +234,10 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
-                      "tenantId": "%s",
                       "email": "suspend@e2e-test.com",
                       "password": "Senha@123"
                     }
-                """.formatted(tenantId)))
+                """))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").isNotEmpty());
 
@@ -255,11 +254,10 @@ class AdminCrossTenantIT extends PostgresIntegrationSupport {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
-                      "tenantId": "%s",
                       "email": "suspend@e2e-test.com",
                       "password": "Senha@123"
                     }
-                """.formatted(tenantId)))
+                """))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.status").value(403));
     }

@@ -1,8 +1,11 @@
 package com.dipdv.modules.admin.controller;
 
+import com.dipdv.modules.admin.dto.FirstAdminRequest;
 import com.dipdv.modules.admin.dto.TenantRequest;
 import com.dipdv.modules.admin.dto.TenantResponse;
 import com.dipdv.modules.admin.service.TenantAdminService;
+import com.dipdv.modules.user.dto.UserResponse;
+import com.dipdv.modules.user.service.UserManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +33,7 @@ import java.util.UUID;
 public class TenantAdminController {
 
     private final TenantAdminService tenantAdminService;
+    private final UserManagementService userManagementService;
 
     @GetMapping
     @Operation(summary = "Lista todos os tenants")
@@ -50,6 +55,15 @@ public class TenantAdminController {
         UUID actorUserId = UUID.fromString(authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(tenantAdminService.createTenant(request, actorUserId));
+    }
+
+    @PostMapping("/{tenantId}/users")
+    @Operation(summary = "Cria o primeiro ADMIN do tenant")
+    public ResponseEntity<UserResponse> createFirstAdmin(
+            @PathVariable UUID tenantId,
+            @RequestBody @Valid FirstAdminRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(userManagementService.createFirstAdmin(tenantId, request));
     }
 
     @PutMapping("/{tenantId}")

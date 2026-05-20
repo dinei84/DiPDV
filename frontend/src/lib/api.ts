@@ -1,8 +1,7 @@
 import { clearAuth } from './auth';
 import { ApiError } from './api-error';
+import { API_URL } from './api-url';
 import { toast } from './toast';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 async function safeParseJson(response: Response) {
   const text = await response.text();

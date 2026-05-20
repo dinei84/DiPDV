@@ -70,7 +70,6 @@ class AdminControllerSecurityTest extends PostgresIntegrationSupport {
     @Test
     void adminTenants_withRegularAdminBearerToken_shouldReturn403() throws Exception {
         String userLoginBody = objectMapper.writeValueAsString(new LoginRequest(
-                DEV_TENANT_ID,
                 "admin@dipdv.dev",
                 "dipdv@2025"
         ));

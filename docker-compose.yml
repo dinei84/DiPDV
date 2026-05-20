@@ -27,6 +27,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@dipdv.com
       PGADMIN_DEFAULT_PASSWORD: dipdv_admin
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
+      PGADMIN_CONFIG_ALLOW_SAVE_PASSWORD: "True"
     ports:
       - "5050:80"
     depends_on:

@@ -6,11 +6,13 @@ import { TenantRequest, TenantResponse } from '@/lib/types';
 import { apiPost, ApiError } from '@/lib/api';
 import { useToast } from '@/components/Toast/useToast';
 import TenantForm from '../_components/TenantForm';
+import FirstAdminDialog from '@/components/Tenants/FirstAdminDialog';
 
 export default function NewTenantPage() {
   const router = useRouter();
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [createdTenant, setCreatedTenant] = useState<TenantResponse | null>(null);
 
   const handleSubmit = async (data: TenantRequest) => {
     try {
@@ -20,7 +22,7 @@ export default function NewTenantPage() {
         data
       );
       addToast('success', 'Tenant criado');
-      router.push(`/tenants/${response.id}`);
+      setCreatedTenant(response);
     } catch (err) {
       const message =
         err instanceof ApiError
@@ -42,6 +44,15 @@ export default function NewTenantPage() {
           isLoading={isLoading}
         />
       </div>
+      {createdTenant && (
+        <FirstAdminDialog
+          tenantId={createdTenant.id}
+          tenantName={createdTenant.name}
+          isOpen={!!createdTenant}
+          onClose={() => router.push(`/tenants/${createdTenant.id}`)}
+          onSuccess={() => router.push('/tenants')}
+        />
+      )}
     </div>
   );
 }

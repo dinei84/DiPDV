@@ -42,14 +42,14 @@ public class CategoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     @Operation(summary = "Criar categoria")
     public CategoryResponse createCategory(@RequestBody @Valid CategoryRequest request) {
         return catalogService.createCategory(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     @Operation(summary = "Atualizar categoria")
     public CategoryResponse updateCategory(@PathVariable UUID id, @RequestBody @Valid CategoryRequest request) {
         return catalogService.updateCategory(id, request);
@@ -57,14 +57,14 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     @Operation(summary = "Deletar categoria (soft delete)")
     public void deleteCategory(@PathVariable UUID id) {
         catalogService.deleteCategory(id);
     }
 
     @PatchMapping("/{id}/reactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     @Operation(summary = "Reativar categoria deletada")
     public CategoryResponse reactivateCategory(@PathVariable UUID id) {
         return catalogService.reactivateCategory(id);
