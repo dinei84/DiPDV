@@ -22,6 +22,8 @@ export default function PdvLayout({
   const router = useRouter();
   const auth = useMemo(() => getAuth(), []);
   const isAdmin = auth?.role === 'ADMIN';
+  const isManager = auth?.role === 'MANAGER';
+  const canManage = isAdmin || isManager;
   const [gestaoOpen, setGestaoOpen] = useState(false);
 
   const handleLogout = () => {
@@ -38,18 +40,19 @@ export default function PdvLayout({
               <div className="min-h-screen bg-gray-100 flex flex-col">
                 <header className="bg-blue-900 text-white px-6 py-3 flex items-center justify-between shadow-md relative z-50">
                   <div className="flex items-center gap-8">
-                    <Link href="/" className="font-bold text-xl tracking-tight">DiPDV</Link>
+                    <Link href={isAdmin || isManager ? "/" : "/pdv"} className="font-bold text-xl tracking-tight">
+                      DiPDV
+                    </Link>
                     <nav className="flex items-center gap-6 text-sm font-medium">
-                      <Link href="/pdv" className="hover:text-blue-200 transition">
-                        PDV
-                      </Link>
-                      <ModuleGate module="REPORTS">
-                        <Link href="/reports" className="hover:text-blue-200 transition">
-                          Relatórios
-                        </Link>
-                      </ModuleGate>
+                      {(isAdmin || isManager) && (
+                        <ModuleGate module="REPORTS">
+                          <Link href="/reports" className="hover:text-blue-200 transition">
+                            Relatórios
+                          </Link>
+                        </ModuleGate>
+                      )}
 
-                      {isAdmin && (
+                      {canManage && (
                         <div className="relative">
                           <button
                             onClick={() => setGestaoOpen(!gestaoOpen)}
@@ -76,13 +79,15 @@ export default function PdvLayout({
                               >
                                 Produtos
                               </Link>
-                              <Link
-                                href="/manage/users"
-                                className="px-4 py-2 hover:bg-gray-100 transition"
-                                onClick={() => setGestaoOpen(false)}
-                              >
-                                Equipe
-                              </Link>
+                              {isAdmin && (
+                                <Link
+                                  href="/manage/users"
+                                  className="px-4 py-2 hover:bg-gray-100 transition"
+                                  onClick={() => setGestaoOpen(false)}
+                                >
+                                  Equipe
+                                </Link>
+                              )}
                             </div>
                           )}
                         </div>
@@ -99,9 +104,11 @@ export default function PdvLayout({
                   </button>
                 </header>
                 <main className="p-4 flex-1">
-                  <ModuleGate module="REPORTS">
-                    <DashboardWidget />
-                  </ModuleGate>
+                  {(isAdmin || isManager) && (
+                    <ModuleGate module="REPORTS">
+                      <DashboardWidget />
+                    </ModuleGate>
+                  )}
                   {children}
                 </main>
               </div>
