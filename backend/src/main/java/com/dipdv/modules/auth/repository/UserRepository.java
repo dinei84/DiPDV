@@ -35,6 +35,18 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     );
 
     /**
+     * Busca usuário ativo por email em qualquer tenant.
+     * Usado para login desambiguado (Sprint 6.1).
+     */
+    Optional<User> findByEmailAndActiveTrue(String email);
+
+    /**
+     * Verifica se um email já está em uso em qualquer tenant por um usuário ativo.
+     * Usado para validação global de email (Sprint 6.1).
+     */
+    boolean existsByEmailAndActiveTrue(String email);
+
+    /**
      * Verifica se um email já está em uso no tenant.
      * Útil para validação no cadastro de usuários (Sprint 1).
      */

@@ -137,11 +137,10 @@ class TenantAdminControllerIT extends ControllerIntegrationSupport {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
-                      "tenantId": "%s",
                       "email": "admin.blocked@dipdv.dev",
                       "password": "Senha@123"
                     }
-                """.formatted(tenantId)))
+                """))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").isNotEmpty());
     }

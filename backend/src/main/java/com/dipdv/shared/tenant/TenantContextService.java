@@ -100,6 +100,25 @@ public class TenantContextService {
             targetStr.equals(tenantStr) ? "GLOBAL" : targetStr);
     }
 
+    /**
+     * Habilita a flag que permite busca global na tabela de usuários.
+     * Usado estritamente durante o fluxo de login sem tenantId.
+     */
+    @Transactional
+    public void applyGlobalLookupContext() {
+        entityManager.createNativeQuery("SET app.bypass_rls_for_login = 'true'").executeUpdate();
+        log.debug("GlobalLookupContext ativado (bypass RLS users)");
+    }
+
+    /**
+     * Desabilita a flag de busca global.
+     */
+    @Transactional
+    public void clearGlobalLookupContext() {
+        entityManager.createNativeQuery("SET app.bypass_rls_for_login = 'false'").executeUpdate();
+        log.debug("GlobalLookupContext desativado");
+    }
+
     private String sanitizeUuid(String uuid) {
         if (!UUID_PATTERN.matcher(uuid).matches()) {
             throw new IllegalArgumentException("UUID inválido: " + uuid);

@@ -15,14 +15,13 @@ class AuthControllerIT extends ControllerIntegrationSupport {
     static final String LOGIN_URL = "/api/v1/auth/login";
 
     @Test
-    @DisplayName("POST /auth/login com credenciais válidas → 200 com token")
+    @DisplayName("POST /auth/login com credenciais válidas → 200 com token (sem tenantId)")
     void login_withValidCredentials_shouldReturn200() throws Exception {
         // O DataInitializer cria admin@dipdv.dev no perfil test
         mockMvc.perform(post(LOGIN_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
-                      "tenantId": "00000000-0000-0000-0000-000000000001",
                       "email": "admin@dipdv.dev",
                       "password": "dipdv@2025"
                     }
@@ -41,7 +40,6 @@ class AuthControllerIT extends ControllerIntegrationSupport {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
-                      "tenantId": "00000000-0000-0000-0000-000000000001",
                       "email": "admin@dipdv.dev",
                       "password": "senha-errada"
                     }
@@ -64,14 +62,14 @@ class AuthControllerIT extends ControllerIntegrationSupport {
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
             .andExpect(jsonPath("$.fields").isArray())
-            .andExpect(jsonPath("$.fields.length()").value(3));
+            .andExpect(jsonPath("$.fields.length()").value(2));
     }
 
     @Test
-    @DisplayName("POST /auth/login sem Content-Type → 5xx")
+    @DisplayName("POST /auth/login sem Content-Type → 415")
     void login_withoutContentType_shouldReturn415() throws Exception {
         mockMvc.perform(post(LOGIN_URL)
                 .content("{\"email\":\"a@b.com\"}"))
-            .andExpect(status().is5xxServerError());
+            .andExpect(status().isUnsupportedMediaType());
     }
 }

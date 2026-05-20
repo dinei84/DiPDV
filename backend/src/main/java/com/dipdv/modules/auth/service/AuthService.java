@@ -52,57 +52,66 @@ public class AuthService {
         // Mensagem genérica intencional — não revelar se é email ou senha
         final String INVALID_CREDENTIALS = "Email ou senha inválidos";
 
-        // IMPORTANTE: Definir o contexto do tenant para que o RLS permita buscar o usuário
-        if (com.dipdv.shared.security.MasterTenantConstants.isMasterTenant(request.tenantId())) {
-            tenantContextService.applyTenantContextSuperAdmin(request.tenantId());
-        } else {
-            tenantContextService.applyTenantContext(request.tenantId());
-        }
+        // 1. Ativar flag de bypass RLS temporário para busca global de email
+        tenantContextService.applyGlobalLookupContext();
 
-        // Verificar status do tenant antes de validar credenciais
-        tenantRepository.findById(request.tenantId()).ifPresent(tenant -> {
-            if (tenant.getPlanType() == TenantPlan.SUSPENDED) {
-                throw new BusinessException(
-                        "Conta suspensa. Entre em contato com o suporte DiPDV.",
-                        HttpStatus.FORBIDDEN);
-            }
-            if (!tenant.isActive()) {
-                throw new BusinessException(
-                        "Conta inativa. Entre em contato com o suporte DiPDV.",
-                        HttpStatus.FORBIDDEN);
-            }
-        });
+        try {
+            // 2. Buscar usuário ativo pelo email (globalmente único na plataforma)
+            User user = userRepository
+                .findByEmailAndActiveTrue(request.email())
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de login com email não encontrado: {}", request.email());
+                    return new BusinessException(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED);
+                });
 
-        User user = userRepository
-            .findActiveByEmailAndTenantId(request.email(), request.tenantId())
-            .orElseThrow(() -> {
-                log.warn("Tentativa de login com email não encontrado: {} tenant: {}",
-                    request.email(), request.tenantId());
-                return new BusinessException(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED);
+            // 3. Definir o contexto do tenant para validação de regras de negócio (plano/suspensão)
+            if (com.dipdv.shared.security.MasterTenantConstants.isMasterTenant(user.getTenantId())) {
+                tenantContextService.applyTenantContextSuperAdmin(user.getTenantId());
+            } else {
+                tenantContextService.applyTenantContext(user.getTenantId());
+            }
+
+            // 4. Verificar status do tenant antes de validar a senha
+            tenantRepository.findById(user.getTenantId()).ifPresent(tenant -> {
+                if (tenant.getPlanType() == TenantPlan.SUSPENDED) {
+                    throw new BusinessException(
+                            "Conta suspensa. Entre em contato com o suporte DiPDV.",
+                            HttpStatus.FORBIDDEN);
+                }
+                if (!tenant.isActive()) {
+                    throw new BusinessException(
+                            "Conta inativa. Entre em contato com o suporte DiPDV.",
+                            HttpStatus.FORBIDDEN);
+                }
             });
 
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            log.warn("Senha incorreta para usuário: {} tenant: {}",
-                user.getId(), request.tenantId());
-            throw new BusinessException(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED);
+            // 5. Validar a senha
+            if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+                log.warn("Senha incorreta para usuário: {}", user.getId());
+                throw new BusinessException(INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED);
+            }
+
+            // 6. Gerar JWT com claims do usuário
+            String token = jwtService.generateToken(
+                user.getId(),
+                user.getTenantId(),
+                user.getRole().name()
+            );
+
+            log.info("Login bem-sucedido — userId={} tenantId={} role={}",
+                user.getId(), user.getTenantId(), user.getRole());
+
+            return AuthResponse.of(
+                token,
+                jwtExpirationMs,
+                user.getId(),
+                user.getTenantId(),
+                user.getName(),
+                user.getRole()
+            );
+        } finally {
+            // Garante que o bypass seja removido mesmo em caso de erro
+            tenantContextService.clearGlobalLookupContext();
         }
-
-        String token = jwtService.generateToken(
-            user.getId(),
-            user.getTenantId(),
-            user.getRole().name()
-        );
-
-        log.info("Login bem-sucedido — userId={} tenantId={} role={}",
-            user.getId(), user.getTenantId(), user.getRole());
-
-        return AuthResponse.of(
-            token,
-            jwtExpirationMs,
-            user.getId(),
-            user.getTenantId(),
-            user.getName(),
-            user.getRole()
-        );
     }
 }
