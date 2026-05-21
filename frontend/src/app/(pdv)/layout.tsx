@@ -1,6 +1,5 @@
 'use client';
 
-import DashboardWidget from '@/components/dashboard/DashboardWidget';
 import AuthGuard from '@/components/AuthGuard';
 import CashRegisterIndicator from '@/components/CashRegister/CashRegisterIndicator';
 import OpenOrdersIndicator from '@/components/Orders/OpenOrdersIndicator';
@@ -104,11 +103,6 @@ export default function PdvLayout({
                   </button>
                 </header>
                 <main className="p-4 flex-1">
-                  {(isAdmin || isManager) && (
-                    <ModuleGate module="REPORTS">
-                      <DashboardWidget />
-                    </ModuleGate>
-                  )}
                   {children}
                 </main>
               </div>

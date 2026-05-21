@@ -5,6 +5,7 @@ import ReportFilters from '@/components/reports/ReportFilters';
 import TopProductsTable from '@/components/reports/TopProductsTable';
 import { apiFetch } from '@/lib/api';
 import { API_URL } from '@/lib/api-url';
+import DashboardWidget from '@/components/dashboard/DashboardWidget';
 import ModuleGate from '@/components/ModuleGate';
 import ModuleNotAvailable from '@/components/ModuleNotAvailable';
 import { getAuth } from '@/lib/auth';
@@ -69,6 +70,7 @@ export default function ReportsPage() {
 
   return (
     <ModuleGate module="REPORTS" fallback={<ModuleNotAvailable />}>
+      <DashboardWidget />
       <div className="p-6 bg-white rounded-xl shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-bold text-blue-900">Relatórios</h1>
